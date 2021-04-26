@@ -1,0 +1,5 @@
+#unconditioned (exact log(Z) = 1311.98)
+./abstraction-sampling -treeType AO -proper 0 -nR 999999999 -iB 10 -t 30 -nLevelsLimit 9999 -igEH 0 -a rand -nContext 9999 -absindv 0 -nAbs 256 -fUAI grid20x20.f10.uai -fVO grid20x20.f10.uai.elim
+
+#using evidence file
+./abstraction-sampling -treeType AO -proper 0 -nR 999999999 -iB 10 -t 30 -nLevelsLimit 9999 -igEH 0 -a rand -nContext 9999 -absindv 0 -nAbs 256 -fUAI grid20x20.f10.uai -fVO grid20x20.f10.uai.elim -fEV grid20x20.f10.uai.evid
