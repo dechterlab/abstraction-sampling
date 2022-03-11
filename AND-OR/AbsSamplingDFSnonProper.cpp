@@ -248,6 +248,10 @@ expand_more :
 			SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
 			OL_from.push_back(an_merged) ;
 			}
+		// h-based
+		else if (AbsSamplingTwoAndNodeCompare_h == _CompFn) {
+			// TODO ...
+			}
 		// context-based abstraction
 		else {
 			// sort output openlist

@@ -22,6 +22,7 @@ AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_CustomProper_DFS ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_Heuristic ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_ContextNonProper ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_RandCntxt ;
+AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_h ;
 
 namespace AndOrSearchSpace
 {
