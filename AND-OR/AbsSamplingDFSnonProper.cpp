@@ -47,7 +47,7 @@ FILE *fpLOG = fopen("C:\\UCI\\ARP\\AND-OR\\log.txt", "w") ;
 
 	// temp array for sort keys
 	std::vector<int32_t> sort_keys ;
-	if (AbsSamplingTwoAndNodeCompare_RandCntxt == _CompFn) 
+	if (AbsSamplingTwoAndNodeCompare_RandCntxt == _CompFn || AbsSamplingTwoAndNodeCompare_RandCntxt_qScaled  == _CompFn) 
 		sort_keys.reserve(100) ;
 
 	// temporary arrays of AND openlist nodes
@@ -248,10 +248,31 @@ expand_more :
 			SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
 			OL_from.push_back(an_merged) ;
 			}
-		// h-based
-		else if (AbsSamplingTwoAndNodeCompare_h == _CompFn) {
-			// TODO ...
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//// Bobak /////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// randomized abstractions; compute abs index for each node, sort and merge with scaled q
+		else if (AbsSamplingTwoAndNodeCompare_RandCntxt_qScaled == _CompFn) {
+			sort_keys.clear() ;
+			if (sort_keys.capacity() < OL_to.size()) sort_keys.reserve(OL_to.size()) ;
+			for (int32_t idx_ = 0 ; idx_< OL_to.size() ; ++idx_) {
+				AndOrSearchSpace::SearchAndNode_WithPath *n = OL_to[idx_] ;
+				sort_keys.push_back(ComputeNodeAbstrationID(*n)) ;
+				}
+			QuickSortLong_i64(sort_keys.data(), OL_to.size(), (int64_t*) OL_to.data(), left, right) ;
+			// go through the output openlist and do IS merges
+			int32_t idxS = 0, idxE = -1 ;
+			for (idxE = idxS+1 ; idxE < OL_to.size() ; ++idxE) {
+				if (sort_keys[idxS] != sort_keys[idxE]) {
+					SearchAndNode_WithPath *an_merged = DoScaledHeuristicISmerge(OL_to, idxS, idxE, _qscale) ;
+					idxS = idxE ;
+					OL_from.push_back(an_merged) ;
+					}
+				}
+			SearchAndNode_WithPath *an_merged = DoScaledHeuristicISmerge(OL_to, idxS, idxE, _qscale) ;
+			OL_from.push_back(an_merged) ;
 			}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// context-based abstraction
 		else {
 			// sort output openlist

@@ -144,6 +144,109 @@ AndOrSearchSpace::SearchAndNode_WithPath *AndOrSearchSpace::AbsSamplingWorkspace
 	return anRes ;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+// Bobak //////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+AndOrSearchSpace::SearchAndNode_WithPath *AndOrSearchSpace::AbsSamplingWorkspace::DoScaledHeuristicISmerge(std::vector<SearchAndNode_WithPath*> & openList, int32_t idxS, int32_t idxE, double scale) 
+// do IS merge of nodes [idxS, idxE) scaling heuristic; return the result node
+{
+	SearchAndNode_WithPath *anRes = NULL ;
+	int32_t k, n = idxE - idxS, idxPicked = -1 ;
+	if (n <= 0) {
+		return anRes ;
+		}
+	double qSUM = ARP_DBL_MAX, qPicked = ARP_DBL_MAX, pPicked = ARP_DBL_MAX ;
+	// notation : 
+	//		Q_i is the (non-log) q-value of each node
+	//		q_i if log(Q_i)
+//	std::vector<double> qLIST ; qLIST.reserve(n) ; qLIST.resize(n) ;
+	if (n > 1) {
+		_nNodesISmerged += n-1 ;
+		// find min/max of h's
+		double h_min = INFINITY;
+		double h_max = -INFINITY;
+		for (k = idxS ; k < idxE ; ++k) {
+			SearchAndNode_WithPath *a = openList[k] ;
+			if (a->h() < h_min) h_min = a->h() ;
+			if (a->h() > h_max) h_max = a->h() ;
+			}
+		double range_min = h_min * scale;
+		double range_max = h_max * scale;
+		if(h_min < h_max){ //to avoid zeros in the denominator when scaling
+			// redistribute q's and compute the sum of q's
+			for (k = idxS ; k < idxE ; ++k) {
+				SearchAndNode_WithPath *a = openList[k] ;
+				//redistribute q for node a
+				double a_scaled_h = a->h();
+				SCALE_DATA_NUMBER_TO_RANGE(a_scaled_h,h_min,h_max,range_min,range_max)
+				a->ISq() = a->ISq() - a->h() + a_scaled_h ;
+				if (idxS == k) qSUM = a->ISq() ;
+				else LOG_OF_SUM_OF_TWO_NUMBERS_GIVEN_AS_LOGS(qSUM,qSUM,a->ISq())
+	//			qLIST[k-idxS] = v ;
+	//			qSUM += v ;
+				}
+			}
+		else {
+			// compute the sum of q's
+			for (k = idxS ; k < idxE ; ++k) {
+				SearchAndNode_WithPath *a = openList[k] ;
+	//			double v = pow(10.0, a->ISq()) ;
+				if (idxS == k) qSUM = a->ISq() ;
+				else LOG_OF_SUM_OF_TWO_NUMBERS_GIVEN_AS_LOGS(qSUM,qSUM,a->ISq())
+	//			qLIST[k-idxS] = v ;
+	//			qSUM += v ;
+				}
+			}
+		// notation : qSUM is the log of sum of q_i's
+		if (ARP_nInfinity == qSUM) {
+			// all nodes have q=0; pick one uniformly randomly
+			double n_ = (double) n ;
+			pPicked = 1.0/n_ ;
+			double r = n_ * _RNG.randExc() ;
+			idxPicked = idxS + ((int)r) ; if (idxPicked >= idxE) idxPicked = idxE-1 ;
+			qSUM = 0.0 ; qPicked = -log10(n_) ;
+			}
+		else {
+			double r = _RNG.rand() ; // *qSUM ;
+			for (k = idxS ; k < idxE ; ++k) {
+				SearchAndNode_WithPath *a = openList[k] ;
+				double p = pow(10.0, a->ISq() - qSUM) ;
+				r -= p ;
+				if (r <= 0.0) 
+					{ break ; }
+				}
+			idxPicked = k ; if (idxPicked >= idxE) idxPicked = idxE-1 ;
+			qPicked = openList[idxPicked]->ISq() ;
+			pPicked = pow(10.0, qPicked - qSUM) ;
+			}
+		anRes = openList[idxPicked] ;
+		// reweight stuff
+		if (_Problem->FunctionsAreConvertedToLogScale()) {
+			double log_p = log10(pPicked) ;
+			anRes->ISw() = anRes->ISw() - log_p ;
+			anRes->ISq() = anRes->ISq() - log_p ;
+			anRes->AccumulatedISw() = anRes->AccumulatedISw() - log_p ;
+			anRes->AccumulatedISwSinceLastBranchingVariable() = anRes->AccumulatedISwSinceLastBranchingVariable() - log_p ;
+			}
+		else {
+			anRes->ISw() = anRes->ISw()/pPicked ;
+			anRes->AccumulatedISw() = anRes->AccumulatedISw()/pPicked ;
+			anRes->ISq() = anRes->ISq()/pPicked ;
+			anRes->AccumulatedISwSinceLastBranchingVariable() = anRes->AccumulatedISwSinceLastBranchingVariable()/pPicked ;
+			}
+		}
+	else 
+		anRes = openList[idxS] ;
+	for (k = idxS ; k < idxE ; ++k) {
+		SearchAndNode_WithPath *a = openList[k] ;
+		if (anRes != a) 
+			{ delete a ; openList[k] = NULL ; }
+		}
+	return anRes ;
+}
+///////////////////////////////////////////////////////////////////////////////////////
+
+
 
 int32_t AndOrSearchSpace::AbsSamplingWorkspace::ComputeAndChildren(SearchAndNode_WithPath *ClosestAncestorAndNode, int32_t ClosestAncestorAndNodeChildIdx, SearchAndNode_WithPath *nParent, BucketElimination::Bucket *bChild, bool IsNewBeginning, bool SetFullPathAssignment, std::vector<SearchAndNode_WithPath*> & openListChild) 
 {
@@ -715,4 +818,40 @@ int32_t AbsSamplingTwoAndNodeCompare_RandCntxt(void *Obj1, void *Obj2)
 		return 0 ;
 	return a1 < a2 ? -1 : 1 ;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//// Bobak /////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//TODO:	this is just a copy of ^^ AbsSamplingTwoAndNodeCompare_RandCntxt(void *Obj1, void *Obj2)
+//		would be nice to have a separate parameter for whether to scale q based on the heuristic
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+int32_t AbsSamplingTwoAndNodeCompare_RandCntxt_qScaled(void *Obj1, void *Obj2)
+// we assume all AND nodes are instances of SearchAndNode_WithPath class.
+// we will compare the two nodes along the path from Obj1/Obj2 to the root; 
+// some nodes on the path may not be in the context.
+// we also assume that '_PathAssignment' member variable of a1/a2 is full path assigment, from a1/a2 to the root, not from a1/a2 to the closest branching variable.
+{
+	if (Obj1 == Obj2) 
+		return 0 ;
+
+	AndOrSearchSpace::SearchAndNode_WithPath *A1 = (AndOrSearchSpace::SearchAndNode_WithPath*) Obj1 ;
+	AndOrSearchSpace::SearchAndNode_WithPath *A2 = (AndOrSearchSpace::SearchAndNode_WithPath*) Obj2 ;
+	AndOrSearchSpace::AbsSamplingWorkspace *ws = A1->WS() ;
+
+	if (A1->V() < 0) 
+		return 0 ;
+	if (A1->V() < A2->V()) 
+		return -1 ;
+	if (A1->V() > A2->V()) 
+		return 1 ;
+
+	// AND nodes have the same variable now.
+
+	int a1 = A1->WS()->ComputeNodeAbstrationID(*A1) ;
+	int a2 = A2->WS()->ComputeNodeAbstrationID(*A2) ;
+	if (a1 == a2) 
+		return 0 ;
+	return a1 < a2 ? -1 : 1 ;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

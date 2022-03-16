@@ -1,7 +1,7 @@
 # CMake file for CVO
 
 cmake_minimum_required(VERSION 2.8)
-project(ARP-v3.0.6)
+project(AbstractionSampling)
 
 # to enable static linking
 option(LINK_STATIC "Link binary statically" ON)
@@ -51,51 +51,51 @@ find_package(Threads)
 
 include_directories(
   ./
-  ../../../ARP/ProgramVersions/ARP-v3.0.6
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/AND-OR
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/BE
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/CVO
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Problem
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Utils
-  ../../../miniSAT
+  ./AND-OR
+  ./BE
+  ./CVO
+  ./Problem
+  ./Utils
+  ./miniSAT
 )
 
 
 # Main executable
-add_executable(ARP-v3.0.6
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/AbsSampling.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/AND-OR/AbsSamplingDFS.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/AND-OR/AbsSamplingDFSnonProper.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/AND-OR/AbsSamplingWorkspace.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/AND-OR/SearchSpaceNodes.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/AND-OR/DFSANDcontainer.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/BE/MiniBucket.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/BE/Bucket.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/BE/MBEworkspace.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/CVO/Graph.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/CVO/Graph_MinFillOrderComputation.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/CVO/VariableOrderComputation.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/CVO/Graph_RemoveRedundantFillEdges.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Problem/Problem.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Problem/Globals.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Problem/Workspace.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Problem/Function.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Utils/Array.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Utils/AVLtree.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Utils/AVLtreeInt64.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Utils/AVLtreeObjects.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Utils/AVLtreeSimple.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Utils/Heap.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Utils/HeapBasic.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Utils/HeapBasicReductionWithPermutationMapping.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Utils/Mutex.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Utils/MiscUtils.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Utils/FnExecutionThread.cpp
-  ../../../ARP/ProgramVersions/ARP-v3.0.6/Utils/Sort.cxx
-  ../../../miniSAT/Solver.cpp
+add_executable(AbstractionSampling
+  ./AbsSampling.cpp
+  ./AND-OR/AbsSamplingDFS.cpp
+  ./AND-OR/AbsSamplingDFSnonProper.cpp
+  ./AND-OR/AbsSamplingWorkspace.cpp
+  ./AND-OR/SearchSpaceNodes.cpp
+  ./AND-OR/DFSANDcontainer.cpp
+  ./BE/MiniBucket.cpp
+  ./BE/Bucket.cpp
+  ./BE/MBEworkspace.cpp
+  ./CVO/Graph.cpp
+  ./CVO/Graph_MinFillOrderComputation.cpp
+  ./CVO/VariableOrderComputation.cpp
+  ./CVO/Graph_RemoveRedundantFillEdges.cpp
+  ./Problem/Problem.cpp
+  ./Problem/Globals.cpp
+  ./Problem/Workspace.cpp
+  ./Problem/Function.cpp
+  ./Utils/Array.cpp
+  ./Utils/AVLtree.cpp
+  ./Utils/AVLtreeInt64.cpp
+  ./Utils/AVLtreeObjects.cpp
+  ./Utils/AVLtreeSimple.cpp
+  ./Utils/Heap.cpp
+  ./Utils/HeapBasic.cpp
+  ./Utils/HeapBasicReductionWithPermutationMapping.cpp
+  ./Utils/Mutex.cpp
+  ./Utils/MiscUtils.cpp
+  ./Utils/FnExecutionThread.cpp
+  ./Utils/Sort.cxx
+  ./miniSAT/Solver.cpp
+
 )
 if (LINK_STATIC)
-  SET_TARGET_PROPERTIES(ARP-v3.0.6 PROPERTIES LINK_SEARCH_START_STATIC 1)
-  SET_TARGET_PROPERTIES(ARP-v3.0.6 PROPERTIES LINK_SEARCH_END_STATIC 1)
+  SET_TARGET_PROPERTIES(AbstractionSampling PROPERTIES LINK_SEARCH_START_STATIC 1)
+  SET_TARGET_PROPERTIES(AbstractionSampling PROPERTIES LINK_SEARCH_END_STATIC 1)
 endif()
-target_link_libraries(ARP-v3.0.6 ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(AbstractionSampling ${CMAKE_THREAD_LIBS_INIT})

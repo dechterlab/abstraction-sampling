@@ -22,7 +22,7 @@ AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_CustomProper_DFS ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_Heuristic ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_ContextNonProper ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_RandCntxt ;
-AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_h ;
+AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_RandCntxt_qScaled ;
 
 namespace AndOrSearchSpace
 {
@@ -40,6 +40,9 @@ protected :
 
 	// comparison fn for comparing two AND nodes; this defines the abstraction.
 	AbsSamplingCompFn *_CompFn ;
+
+	// q scaling parameter.
+	double _qscale ;
 
 public :
 
@@ -60,6 +63,7 @@ public :
 	inline int32_t & nLevelsLimit(void) { return _nLevelsLimit; }
 	inline double & heuristicCoefficient(void) {return _heuristicCoefficient; }
 	inline double & heuristicPower(void) {return _heuristicPower; }
+	inline double & qscale(void) {return _qscale; }
 protected :
 
 	// number of nodes in the AND/OR graph; including root node.
@@ -878,8 +882,12 @@ public :
 		return 0 ;
 	}
 
-	// do IS merge of two AND nodes [idxS,idxE)
+	// do IS merge of sequence of AND nodes [idxS,idxE)
 	SearchAndNode_WithPath *DoISmerge(std::vector<SearchAndNode_WithPath*> & openList, int32_t idxS, int32_t idxE) ;
+
+	// do IS merge of sequence of AND nodes [idxS,idxE) using scaled heuristic
+	SearchAndNode_WithPath *DoScaledHeuristicISmerge(std::vector<SearchAndNode_WithPath*> & openList, int32_t idxS, int32_t idxE, double scale = 1.0) ;
+
 
 	// do IS merge of two AND nodes
 	SearchAndNode *DoISmerge(SearchAndNode *A1, SearchAndNode *A2)
@@ -1520,6 +1528,7 @@ done :
 	AbsSamplingWorkspace(AbsSamplingCompFn CompFn) :
 		_Root(this, -1, -1), 
 		_CompFn(CompFn), 
+		_qscale(1.00),
 		_nNodesCreatedLimitBeforeLevellingOff(INT64_MAX), 
 		_nNodesInTree(1), 
 		_nNodesCreated(1), 
