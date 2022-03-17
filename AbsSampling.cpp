@@ -106,8 +106,9 @@ int main(int argc, char* argv[])
 	int iB = -1 ;
 	ARE::VarElimOrderComp::ObjectiveToMinimize objCodePrimary = ARE::VarElimOrderComp::Width, objCodeSecondary = ARE::VarElimOrderComp::None ;
 	std::string algorithm ;
-	double hscale = 1.0 ;
-	double wscale = 1.0 ;
+	double hscale = 1.0 ; //no scaling
+	double wscale = 1.0 ; //no scaling
+	double wscaleDecayCoefficient = 1.0 ; //no decay
 	double exactZ = 0.0;
 
 	if (1 + 2*nArgs != nParams) {
@@ -150,6 +151,8 @@ int main(int argc, char* argv[])
 			hscale = atof(sArg.c_str());
 		else if (0 == stricmp("-wscale", sArgID.c_str()))
 			wscale = atof(sArg.c_str());
+		else if (0 == stricmp("-wscaleDecayCoefficient", sArgID.c_str()))
+			wscaleDecayCoefficient = atof(sArg.c_str());
 		else if (0 == stricmp("-fpvo", sArgID.c_str()))
 			findPracticalVariableOrder = '1' == sArg[0] || 'y' == sArg[0] || 'Y' == sArg[0] ;
 		else if (0 == stricmp("-proper", sArgID.c_str()))
@@ -275,11 +278,14 @@ int main(int argc, char* argv[])
 	if (nLevelsLimit < 0) nLevelsLimit = 0 ;
 	ws.nLevelsLimit() = nLevelsLimit ;
 
-	if (hscale > 0)
-	ws.hscale() = hscale ;
+	if (hscale > 0) ws.hscale() = hscale ;
+	else return 71;
 
-	if (wscale > 0)
-	ws.wscale() = wscale ;
+	if (wscale > 0) ws.wscale() = wscale ;
+	else return 72;
+
+	if (wscaleDecayCoefficient > 0 && wscaleDecayCoefficient <= 1.0) ws.wscaleDecayCoefficient() = wscaleDecayCoefficient ;
+	else return 73;
 
 	bool isAO = false;
 	if(tree_type == "AO"){
@@ -405,9 +411,9 @@ int main(int argc, char* argv[])
 		snContext = std::to_string(nContext) + "_" + std::to_string(nLevelsLimit);
 		}
     output_filename = abs_is_randomized ? 
-		(problem_filename + "-" + tree_type + "-i-" + std::to_string(iB) + "-prop-" + (properAlg ? "1" : "0") + "-a-" + algorithm + "-nC-"  + snContext + "-nAbs-"  + snAbs + "-abs_indv-" + sabs_indv + "-nR-" +  std::to_string(nrunstodo) + "-hscale-" + std::to_string(int(hscale*100)) + "-wscale-" + std::to_string(int(wscale*100)) +".out") 
+		(problem_filename + "-" + tree_type + "-i-" + std::to_string(iB) + "-prop-" + (properAlg ? "1" : "0") + "-a-" + algorithm + "-nC-"  + snContext + "-nAbs-"  + snAbs + "-abs_indv-" + sabs_indv + "-nR-" +  std::to_string(nrunstodo) + "-hscale-" + std::to_string(int(hscale*100)) + "-wscale-" + std::to_string(int(wscale*100))  + "-wdecay-" + std::to_string(int(wscaleDecayCoefficient*100)) +".out") 
 	    :
-		(problem_filename + "-" + tree_type + "-i-" + std::to_string(iB) + "-prop-" + (properAlg ? "1" : "0") + "-a-" + algorithm + "-nC-"  + snContext + "-nR-" +  std::to_string(nrunstodo) + "-hscale-" + std::to_string(int(hscale*100)) + "-wscale-" + std::to_string(int(wscale*100)) +".out") ;
+		(problem_filename + "-" + tree_type + "-i-" + std::to_string(iB) + "-prop-" + (properAlg ? "1" : "0") + "-a-" + algorithm + "-nC-"  + snContext + "-nR-" +  std::to_string(nrunstodo) + "-hscale-" + std::to_string(int(hscale*100)) + "-wscale-" + std::to_string(int(wscale*100))  + "-wdecay-" + std::to_string(int(wscaleDecayCoefficient*100)) +".out") ;
     output_file = fopen(output_filename.c_str(), "w");
     fprintf(output_file, "%s \t%d \t%s \t%s \t%d \t%d \t%d \t%d \t%d \t%g \t%g \t%lld \t%c \t%s\n", 
 		problem_filename.c_str(), (int) iB, algorithm.c_str(), snContext.c_str(), (int) nrunstodo, (int) (AS_VERSION), 
@@ -589,6 +595,8 @@ int main(int argc, char* argv[])
 		
         if (need_break) 
 			break ;
+
+		ws.decayCoefficients();
 		}
 
 //  Stop timers

@@ -1,22 +1,22 @@
 Determining if the pthread_create exist failed with the following output:
 Change Dir: /home/bbpezeshki/VSCode/abstraction-sampling/_build_3.08_weighted_w/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_e3a02/fast"
-/usr/bin/make -f CMakeFiles/cmTC_e3a02.dir/build.make CMakeFiles/cmTC_e3a02.dir/build
+Run Build Command:"/usr/bin/make" "cmTC_27a02/fast"
+/usr/bin/make -f CMakeFiles/cmTC_27a02.dir/build.make CMakeFiles/cmTC_27a02.dir/build
 make[1]: Entering directory '/home/bbpezeshki/VSCode/abstraction-sampling/_build_3.08_weighted_w/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_e3a02.dir/CheckSymbolExists.c.o
-/usr/bin/cc    -o CMakeFiles/cmTC_e3a02.dir/CheckSymbolExists.c.o   -c /home/bbpezeshki/VSCode/abstraction-sampling/_build_3.08_weighted_w/CMakeFiles/CMakeTmp/CheckSymbolExists.c
-Linking C executable cmTC_e3a02
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e3a02.dir/link.txt --verbose=1
-/usr/bin/cc      -rdynamic CMakeFiles/cmTC_e3a02.dir/CheckSymbolExists.c.o  -o cmTC_e3a02 
-CMakeFiles/cmTC_e3a02.dir/CheckSymbolExists.c.o: In function `main':
+Building C object CMakeFiles/cmTC_27a02.dir/CheckSymbolExists.c.o
+/usr/bin/cc    -o CMakeFiles/cmTC_27a02.dir/CheckSymbolExists.c.o   -c /home/bbpezeshki/VSCode/abstraction-sampling/_build_3.08_weighted_w/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_27a02
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_27a02.dir/link.txt --verbose=1
+/usr/bin/cc      -rdynamic CMakeFiles/cmTC_27a02.dir/CheckSymbolExists.c.o  -o cmTC_27a02 
+CMakeFiles/cmTC_27a02.dir/CheckSymbolExists.c.o: In function `main':
 CheckSymbolExists.c:(.text+0x1b): undefined reference to `pthread_create'
 collect2: error: ld returned 1 exit status
-CMakeFiles/cmTC_e3a02.dir/build.make:97: recipe for target 'cmTC_e3a02' failed
-make[1]: *** [cmTC_e3a02] Error 1
+CMakeFiles/cmTC_27a02.dir/build.make:97: recipe for target 'cmTC_27a02' failed
+make[1]: *** [cmTC_27a02] Error 1
 make[1]: Leaving directory '/home/bbpezeshki/VSCode/abstraction-sampling/_build_3.08_weighted_w/CMakeFiles/CMakeTmp'
-Makefile:126: recipe for target 'cmTC_e3a02/fast' failed
-make: *** [cmTC_e3a02/fast] Error 2
+Makefile:126: recipe for target 'cmTC_27a02/fast' failed
+make: *** [cmTC_27a02/fast] Error 2
 
 File /home/bbpezeshki/VSCode/abstraction-sampling/_build_3.08_weighted_w/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
 /* */
@@ -36,20 +36,20 @@ int main(int argc, char** argv)
 Determining if the function pthread_create exists in the pthreads failed with the following output:
 Change Dir: /home/bbpezeshki/VSCode/abstraction-sampling/_build_3.08_weighted_w/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_20a5c/fast"
-/usr/bin/make -f CMakeFiles/cmTC_20a5c.dir/build.make CMakeFiles/cmTC_20a5c.dir/build
+Run Build Command:"/usr/bin/make" "cmTC_16242/fast"
+/usr/bin/make -f CMakeFiles/cmTC_16242.dir/build.make CMakeFiles/cmTC_16242.dir/build
 make[1]: Entering directory '/home/bbpezeshki/VSCode/abstraction-sampling/_build_3.08_weighted_w/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_20a5c.dir/CheckFunctionExists.c.o
-/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_20a5c.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.10/Modules/CheckFunctionExists.c
-Linking C executable cmTC_20a5c
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_20a5c.dir/link.txt --verbose=1
-/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_20a5c.dir/CheckFunctionExists.c.o  -o cmTC_20a5c -lpthreads 
+Building C object CMakeFiles/cmTC_16242.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_16242.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.10/Modules/CheckFunctionExists.c
+Linking C executable cmTC_16242
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_16242.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_16242.dir/CheckFunctionExists.c.o  -o cmTC_16242 -lpthreads 
 /usr/bin/ld: cannot find -lpthreads
 collect2: error: ld returned 1 exit status
-CMakeFiles/cmTC_20a5c.dir/build.make:97: recipe for target 'cmTC_20a5c' failed
-make[1]: *** [cmTC_20a5c] Error 1
+CMakeFiles/cmTC_16242.dir/build.make:97: recipe for target 'cmTC_16242' failed
+make[1]: *** [cmTC_16242] Error 1
 make[1]: Leaving directory '/home/bbpezeshki/VSCode/abstraction-sampling/_build_3.08_weighted_w/CMakeFiles/CMakeTmp'
-Makefile:126: recipe for target 'cmTC_20a5c/fast' failed
-make: *** [cmTC_20a5c/fast] Error 2
+Makefile:126: recipe for target 'cmTC_16242/fast' failed
+make: *** [cmTC_16242/fast] Error 2
 
 

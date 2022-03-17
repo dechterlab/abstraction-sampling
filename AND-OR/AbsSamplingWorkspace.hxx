@@ -46,6 +46,7 @@ protected :
 
 	// importance w scaling parameter.
 	double _wscale ;
+	double _wscaleDecayCoefficient ;
 
 public :
 
@@ -68,6 +69,7 @@ public :
 	inline double & heuristicPower(void) {return _heuristicPower; }
 	inline double & hscale(void) {return _hscale; }
 	inline double & wscale(void) {return _wscale; }
+	inline double & wscaleDecayCoefficient(void) {return _wscaleDecayCoefficient; }
 protected :
 
 	// number of nodes in the AND/OR graph; including root node.
@@ -1529,11 +1531,16 @@ done :
 		return 0 ;
 	}
 
+	void decayCoefficients(){
+		_wscale = (_wscale - 1.0) * _wscaleDecayCoefficient + 1.0;
+	}
+
 	AbsSamplingWorkspace(AbsSamplingCompFn CompFn) :
 		_Root(this, -1, -1), 
 		_CompFn(CompFn), 
-		_hscale(1.00),
-		_wscale(1.00),
+		_hscale(1.00), //no scaling
+		_wscale(1.00), //no scaling
+		_wscaleDecayCoefficient(1.0), //no decay
 		_nNodesCreatedLimitBeforeLevellingOff(INT64_MAX), 
 		_nNodesInTree(1), 
 		_nNodesCreated(1), 
