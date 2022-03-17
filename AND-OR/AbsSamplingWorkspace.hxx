@@ -22,7 +22,7 @@ AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_CustomProper_DFS ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_Heuristic ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_ContextNonProper ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_RandCntxt ;
-AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_RandCntxt_qScaled ;
+AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_RandCntxt_Scaled ;
 
 namespace AndOrSearchSpace
 {
@@ -41,8 +41,11 @@ protected :
 	// comparison fn for comparing two AND nodes; this defines the abstraction.
 	AbsSamplingCompFn *_CompFn ;
 
-	// q scaling parameter.
-	double _qscale ;
+	// h scaling parameter.
+	double _hscale ;
+
+	// importance w scaling parameter.
+	double _wscale ;
 
 public :
 
@@ -63,7 +66,8 @@ public :
 	inline int32_t & nLevelsLimit(void) { return _nLevelsLimit; }
 	inline double & heuristicCoefficient(void) {return _heuristicCoefficient; }
 	inline double & heuristicPower(void) {return _heuristicPower; }
-	inline double & qscale(void) {return _qscale; }
+	inline double & hscale(void) {return _hscale; }
+	inline double & wscale(void) {return _wscale; }
 protected :
 
 	// number of nodes in the AND/OR graph; including root node.
@@ -886,7 +890,7 @@ public :
 	SearchAndNode_WithPath *DoISmerge(std::vector<SearchAndNode_WithPath*> & openList, int32_t idxS, int32_t idxE) ;
 
 	// do IS merge of sequence of AND nodes [idxS,idxE) using scaled heuristic
-	SearchAndNode_WithPath *DoScaledHeuristicISmerge(std::vector<SearchAndNode_WithPath*> & openList, int32_t idxS, int32_t idxE, double scale = 1.0) ;
+	SearchAndNode_WithPath *DoScaledISmerge(std::vector<SearchAndNode_WithPath*> & openList, int32_t idxS, int32_t idxE, double h_scale = 1.0, double w_scale = 1.0) ;
 
 
 	// do IS merge of two AND nodes
@@ -1528,7 +1532,8 @@ done :
 	AbsSamplingWorkspace(AbsSamplingCompFn CompFn) :
 		_Root(this, -1, -1), 
 		_CompFn(CompFn), 
-		_qscale(1.00),
+		_hscale(1.00),
+		_wscale(1.00),
 		_nNodesCreatedLimitBeforeLevellingOff(INT64_MAX), 
 		_nNodesInTree(1), 
 		_nNodesCreated(1), 

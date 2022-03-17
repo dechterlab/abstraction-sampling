@@ -47,7 +47,7 @@ FILE *fpLOG = fopen("C:\\UCI\\ARP\\AND-OR\\log.txt", "w") ;
 
 	// temp array for sort keys
 	std::vector<int32_t> sort_keys ;
-	if (AbsSamplingTwoAndNodeCompare_RandCntxt == _CompFn || AbsSamplingTwoAndNodeCompare_RandCntxt_qScaled  == _CompFn) 
+	if (AbsSamplingTwoAndNodeCompare_RandCntxt == _CompFn || AbsSamplingTwoAndNodeCompare_RandCntxt_Scaled  == _CompFn) 
 		sort_keys.reserve(100) ;
 
 	// temporary arrays of AND openlist nodes
@@ -252,7 +252,7 @@ expand_more :
 //// Bobak /////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// randomized abstractions; compute abs index for each node, sort and merge with scaled q
-		else if (AbsSamplingTwoAndNodeCompare_RandCntxt_qScaled == _CompFn) {
+		else if (AbsSamplingTwoAndNodeCompare_RandCntxt_Scaled == _CompFn) {
 			sort_keys.clear() ;
 			if (sort_keys.capacity() < OL_to.size()) sort_keys.reserve(OL_to.size()) ;
 			for (int32_t idx_ = 0 ; idx_< OL_to.size() ; ++idx_) {
@@ -264,12 +264,12 @@ expand_more :
 			int32_t idxS = 0, idxE = -1 ;
 			for (idxE = idxS+1 ; idxE < OL_to.size() ; ++idxE) {
 				if (sort_keys[idxS] != sort_keys[idxE]) {
-					SearchAndNode_WithPath *an_merged = DoScaledHeuristicISmerge(OL_to, idxS, idxE, _qscale) ;
+					SearchAndNode_WithPath *an_merged = DoScaledISmerge(OL_to, idxS, idxE, _hscale, _wscale) ;
 					idxS = idxE ;
 					OL_from.push_back(an_merged) ;
 					}
 				}
-			SearchAndNode_WithPath *an_merged = DoScaledHeuristicISmerge(OL_to, idxS, idxE, _qscale) ;
+			SearchAndNode_WithPath *an_merged = DoScaledISmerge(OL_to, idxS, idxE, _hscale, _wscale) ;
 			OL_from.push_back(an_merged) ;
 			}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

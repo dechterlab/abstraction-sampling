@@ -147,7 +147,7 @@ AndOrSearchSpace::SearchAndNode_WithPath *AndOrSearchSpace::AbsSamplingWorkspace
 ///////////////////////////////////////////////////////////////////////////////////////
 // Bobak //////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
-AndOrSearchSpace::SearchAndNode_WithPath *AndOrSearchSpace::AbsSamplingWorkspace::DoScaledHeuristicISmerge(std::vector<SearchAndNode_WithPath*> & openList, int32_t idxS, int32_t idxE, double scale) 
+AndOrSearchSpace::SearchAndNode_WithPath *AndOrSearchSpace::AbsSamplingWorkspace::DoScaledISmerge(std::vector<SearchAndNode_WithPath*> & openList, int32_t idxS, int32_t idxE, double h_scale, double w_scale) 
 // do IS merge of nodes [idxS, idxE) scaling heuristic; return the result node
 {
 	SearchAndNode_WithPath *anRes = NULL ;
@@ -170,16 +170,20 @@ AndOrSearchSpace::SearchAndNode_WithPath *AndOrSearchSpace::AbsSamplingWorkspace
 			if (a->h() < h_min) h_min = a->h() ;
 			if (a->h() > h_max) h_max = a->h() ;
 			}
-		double range_min = h_min * scale;
-		double range_max = h_max * scale;
+		double h_scaled_range_min = h_min * h_scale;
+		double h_scaled_range_max = h_max * h_scale;
+		double q_min = INFINITY;
+		double q_max = -INFINITY;
 		if(h_min < h_max){ //to avoid zeros in the denominator when scaling
 			// redistribute q's and compute the sum of q's
 			for (k = idxS ; k < idxE ; ++k) {
 				SearchAndNode_WithPath *a = openList[k] ;
 				//redistribute q for node a
 				double a_scaled_h = a->h();
-				SCALE_DATA_NUMBER_TO_RANGE(a_scaled_h,h_min,h_max,range_min,range_max)
+				SCALE_DATA_NUMBER_TO_RANGE(a_scaled_h,h_min,h_max,h_scaled_range_min,h_scaled_range_max)
 				a->ISq() = a->ISq() - a->h() + a_scaled_h ;
+				if (a->ISq() < q_min) q_min = a->ISq() ;
+				if (a->ISq() > q_max) q_max = a->ISq() ;
 				if (idxS == k) qSUM = a->ISq() ;
 				else LOG_OF_SUM_OF_TWO_NUMBERS_GIVEN_AS_LOGS(qSUM,qSUM,a->ISq())
 	//			qLIST[k-idxS] = v ;
@@ -191,6 +195,8 @@ AndOrSearchSpace::SearchAndNode_WithPath *AndOrSearchSpace::AbsSamplingWorkspace
 			for (k = idxS ; k < idxE ; ++k) {
 				SearchAndNode_WithPath *a = openList[k] ;
 	//			double v = pow(10.0, a->ISq()) ;
+				if (a->ISq() < q_min) q_min = a->ISq() ;
+				if (a->ISq() > q_max) q_max = a->ISq() ;
 				if (idxS == k) qSUM = a->ISq() ;
 				else LOG_OF_SUM_OF_TWO_NUMBERS_GIVEN_AS_LOGS(qSUM,qSUM,a->ISq())
 	//			qLIST[k-idxS] = v ;
@@ -221,6 +227,12 @@ AndOrSearchSpace::SearchAndNode_WithPath *AndOrSearchSpace::AbsSamplingWorkspace
 			}
 		anRes = openList[idxPicked] ;
 		// reweight stuff
+		double p_min = pow(10.0, q_min - qSUM);
+		double p_max = pow(10.0, q_max - qSUM);
+		double p_scaled_range_min = p_min * w_scale;
+		double p_scaled_range_max = p_max / w_scale;
+		if(p_min < p_max) //to avoid zeros in the denominator when scaling
+			SCALE_DATA_NUMBER_TO_RANGE(pPicked,p_min,p_max,p_scaled_range_min,p_scaled_range_max)
 		if (_Problem->FunctionsAreConvertedToLogScale()) {
 			double log_p = log10(pPicked) ;
 			anRes->ISw() = anRes->ISw() - log_p ;
@@ -825,7 +837,7 @@ int32_t AbsSamplingTwoAndNodeCompare_RandCntxt(void *Obj1, void *Obj2)
 //TODO:	this is just a copy of ^^ AbsSamplingTwoAndNodeCompare_RandCntxt(void *Obj1, void *Obj2)
 //		would be nice to have a separate parameter for whether to scale q based on the heuristic
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int32_t AbsSamplingTwoAndNodeCompare_RandCntxt_qScaled(void *Obj1, void *Obj2)
+int32_t AbsSamplingTwoAndNodeCompare_RandCntxt_Scaled(void *Obj1, void *Obj2)
 // we assume all AND nodes are instances of SearchAndNode_WithPath class.
 // we will compare the two nodes along the path from Obj1/Obj2 to the root; 
 // some nodes on the path may not be in the context.

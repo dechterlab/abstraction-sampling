@@ -24,7 +24,7 @@
 // 3000002 = proper/non-proper both in same AbsSampling.cpp
 // 3000003 = randomized abstractions
 // #define AS_VERSION 3000006
-#define AS_VERSION 3000007
+#define AS_VERSION 3000008
 
 //#define PERFORM_SINGLTON_CONSISTENCY_CHECK
 
@@ -106,7 +106,8 @@ int main(int argc, char* argv[])
 	int iB = -1 ;
 	ARE::VarElimOrderComp::ObjectiveToMinimize objCodePrimary = ARE::VarElimOrderComp::Width, objCodeSecondary = ARE::VarElimOrderComp::None ;
 	std::string algorithm ;
-	double qscale = 1.0 ;
+	double hscale = 1.0 ;
+	double wscale = 1.0 ;
 	double exactZ = 0.0;
 
 	if (1 + 2*nArgs != nParams) {
@@ -145,8 +146,10 @@ int main(int argc, char* argv[])
 			AndOrSearchSpace::EXPLOIT_EXACT_H = 0 == atoi(sArg.c_str()) ;
 		else if (0 == stricmp("-a", sArgID.c_str()))
 			algorithm = sArg ;
-		else if (0 == stricmp("-qscale", sArgID.c_str()))
-			qscale = atof(sArg.c_str());
+		else if (0 == stricmp("-hscale", sArgID.c_str()))
+			hscale = atof(sArg.c_str());
+		else if (0 == stricmp("-wscale", sArgID.c_str()))
+			wscale = atof(sArg.c_str());
 		else if (0 == stricmp("-fpvo", sArgID.c_str()))
 			findPracticalVariableOrder = '1' == sArg[0] || 'y' == sArg[0] || 'Y' == sArg[0] ;
 		else if (0 == stricmp("-proper", sArgID.c_str()))
@@ -247,8 +250,8 @@ int main(int argc, char* argv[])
 		else {
 			if (! properAlg) {
 				if (abs_is_randomized) {
-					if(qscale != 1.0)
-						fn = AbsSamplingTwoAndNodeCompare_RandCntxt_qScaled ;
+					if(hscale != 1.0 || wscale != 1.0)
+						fn = AbsSamplingTwoAndNodeCompare_RandCntxt_Scaled ;
 					else
 						fn = AbsSamplingTwoAndNodeCompare_RandCntxt ;
 					}
@@ -272,8 +275,11 @@ int main(int argc, char* argv[])
 	if (nLevelsLimit < 0) nLevelsLimit = 0 ;
 	ws.nLevelsLimit() = nLevelsLimit ;
 
-	if (qscale > 0)
-	ws.qscale() = qscale ;
+	if (hscale > 0)
+	ws.hscale() = hscale ;
+
+	if (wscale > 0)
+	ws.wscale() = wscale ;
 
 	bool isAO = false;
 	if(tree_type == "AO"){
@@ -399,9 +405,9 @@ int main(int argc, char* argv[])
 		snContext = std::to_string(nContext) + "_" + std::to_string(nLevelsLimit);
 		}
     output_filename = abs_is_randomized ? 
-		(problem_filename + "-" + tree_type + "-i-" + std::to_string(iB) + "-prop-" + (properAlg ? "1" : "0") + "-a-" + algorithm + "-nC-"  + snContext + "-nAbs-"  + snAbs + "-abs_indv-" + sabs_indv + "-nR-" +  std::to_string(nrunstodo) + "-qscale-" + std::to_string(int(qscale*100)) +".out") 
+		(problem_filename + "-" + tree_type + "-i-" + std::to_string(iB) + "-prop-" + (properAlg ? "1" : "0") + "-a-" + algorithm + "-nC-"  + snContext + "-nAbs-"  + snAbs + "-abs_indv-" + sabs_indv + "-nR-" +  std::to_string(nrunstodo) + "-hscale-" + std::to_string(int(hscale*100)) + "-wscale-" + std::to_string(int(wscale*100)) +".out") 
 	    :
-		(problem_filename + "-" + tree_type + "-i-" + std::to_string(iB) + "-prop-" + (properAlg ? "1" : "0") + "-a-" + algorithm + "-nC-"  + snContext + "-nR-" +  std::to_string(nrunstodo) + "-qscale-" + std::to_string(int(qscale*100)) +".out") ;
+		(problem_filename + "-" + tree_type + "-i-" + std::to_string(iB) + "-prop-" + (properAlg ? "1" : "0") + "-a-" + algorithm + "-nC-"  + snContext + "-nR-" +  std::to_string(nrunstodo) + "-hscale-" + std::to_string(int(hscale*100)) + "-wscale-" + std::to_string(int(wscale*100)) +".out") ;
     output_file = fopen(output_filename.c_str(), "w");
     fprintf(output_file, "%s \t%d \t%s \t%s \t%d \t%d \t%d \t%d \t%d \t%g \t%g \t%lld \t%c \t%s\n", 
 		problem_filename.c_str(), (int) iB, algorithm.c_str(), snContext.c_str(), (int) nrunstodo, (int) (AS_VERSION), 
