@@ -580,7 +580,7 @@ int32_t AbsSamplingTwoAndNodeCompare_CustomProper_DFS(void *Obj1, void *Obj2)
 }
 
 
-int32_t AbsSamplingTwoAndNodeCompare_Heuristic1(void *Obj1, void *Obj2)
+int32_t AbsSamplingTwoAndNodeCompare_ConditionedZEstimate1(void *Obj1, void *Obj2)
 {
 	if (Obj1 == Obj2) 
 		return 0 ;
@@ -623,7 +623,7 @@ int32_t AbsSamplingTwoAndNodeCompare_Heuristic1(void *Obj1, void *Obj2)
 	return 0 ;
 }
 
-int32_t AbsSamplingTwoAndNodeCompare_Heuristic2(void *Obj1, void *Obj2)
+int32_t AbsSamplingTwoAndNodeCompare_ConditionedZEstimate2(void *Obj1, void *Obj2)
 {
 	if (Obj1 == Obj2) 
 		return 0 ;
@@ -665,7 +665,68 @@ int32_t AbsSamplingTwoAndNodeCompare_Heuristic2(void *Obj1, void *Obj2)
 	return 0 ;
 }
 
+int32_t AbsSamplingTwoAndNodeCompare_HeuristicSimple(void *Obj1, void *Obj2)
+{
+	if (Obj1 == Obj2) 
+		return 0 ;
+
+	AndOrSearchSpace::SearchAndNode *A1 = (AndOrSearchSpace::SearchAndNode*) Obj1 ;
+	AndOrSearchSpace::SearchAndNode *A2 = (AndOrSearchSpace::SearchAndNode*) Obj2 ;
+	AndOrSearchSpace::AbsSamplingWorkspace *ws = A1->WS() ;
+
+	double h1 = A1->h();
+	double h2 = A2->h();
+
+	if (h1 < h2)
+		return -1 ;
+	else if (h1 > h2)
+		return 1 ;
+
+	return 0 ;
+}
+
 int32_t AbsSamplingTwoAndNodeCompare_Heuristic(void *Obj1, void *Obj2)
+{
+	if (Obj1 == Obj2) 
+		return 0 ;
+
+	AndOrSearchSpace::SearchAndNode *A1 = (AndOrSearchSpace::SearchAndNode*) Obj1 ;
+	AndOrSearchSpace::SearchAndNode *A2 = (AndOrSearchSpace::SearchAndNode*) Obj2 ;
+	AndOrSearchSpace::AbsSamplingWorkspace *ws = A1->WS() ;
+	double hC = ws->heuristicCoefficient();
+	double hP = ws->heuristicPower();
+	int level = A1->VarPosInOrder();
+	// printf("\n%d %d %d\n", level, A1->Value(), A2->Value());
+
+	if (A1->VarPosInOrder() < A2->VarPosInOrder()) 
+		return -1 ;
+	else if (A1->VarPosInOrder() > A2->VarPosInOrder()) 
+		return 1 ;
+	if (A1->ClosestBranchingAncestor() < A2->ClosestBranchingAncestor()) 
+		return -1 ;
+	else if (A1->ClosestBranchingAncestor() > A2->ClosestBranchingAncestor()) 
+		return 1 ;
+	// AND nodes have the same variable
+	if (A1->V() < 0) 
+		return 0 ;
+	//printf("A1->h: %g, A2->h: %g \n", A1->h(), A2->h());
+
+	// level = 0;
+	double h1 = floor(pow(10, hP*(A1->h()-(hC-level*log10(2)))));
+	double h2 = floor(pow(10, hP*(A2->h()-(hC-level*log10(2)))));
+	// printf("hP: %lf\n", hP);
+
+	// printf("A1->f: %g, A2->f: %g %g , %g \n", g1, g2, A1->h() + A1->AccumulatedCost(), A2->h() + A2->AccumulatedCost());
+
+	if (h1 < h2)
+		return -1 ;
+	else if (h1 > h2)
+		return 1 ;
+
+	return 0 ;
+}
+
+int32_t AbsSamplingTwoAndNodeCompare_ConditionedZEstimate(void *Obj1, void *Obj2)
 {
 	if (Obj1 == Obj2) 
 		return 0 ;

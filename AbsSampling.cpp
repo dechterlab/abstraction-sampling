@@ -24,7 +24,7 @@
 // 3000002 = proper/non-proper both in same AbsSampling.cpp
 // 3000003 = randomized abstractions
 // #define AS_VERSION 3000006
-#define AS_VERSION 3000008
+#define AS_VERSION 3000009
 
 //#define PERFORM_SINGLTON_CONSISTENCY_CHECK
 
@@ -244,6 +244,7 @@ int main(int argc, char* argv[])
 	AbsSamplingCompFn *fn = AbsSamplingTwoAndNodeCompare_Knuth ;
 	bool alg_is_DFS = true ;
 	bool abs_is_randomized = 0 == stricmp("rand", algorithm.c_str()) ;
+	bool abs_is_dynamic = algorithm.find("dynamic") != std::string::npos ;
 	if (abs_is_randomized) {
 		if (nAbs <= 0) nAbs = 1 ;
 		}
@@ -252,7 +253,11 @@ int main(int argc, char* argv[])
 			fn = AbsSamplingTwoAndNodeCompare_Unique ;
 		else {
 			if (! properAlg) {
-				if (abs_is_randomized) {
+				if (abs_is_dynamic){
+					if(algorithm.find("HBSimple") != std::string::npos)
+						fn = AbsSamplingTwoAndNodeCompare_HeuristicSimple ;
+					}
+				else if (abs_is_randomized) {
 					if(hscale != 1.0 || wscale != 1.0)
 						fn = AbsSamplingTwoAndNodeCompare_RandCntxt_Scaled ;
 					else
@@ -270,6 +275,7 @@ int main(int argc, char* argv[])
 			}
 		}
 	AndOrSearchSpace::AbsSamplingWorkspace ws(fn) ;
+
 	int resWSinit = ws.Initialize(p, true, NULL, false) ;
 	if (0 != resWSinit) 
 		return 50 ;
@@ -295,6 +301,10 @@ int main(int argc, char* argv[])
 	if (0 != resCB) 
 		return 51 ;
 //	int resCB = ws.CreateBuckets(true, true, false, isAO) ;
+
+	if(abs_is_dynamic) {
+		ws.set_nRandAbs(nAbs);
+		}
 
 	// NOTE : the MaxNumVarsInBucket() is BE (not MBE) based!!! i.e. as if i-bound=inf
 	if (p.VarOrdering_InducedWidth() < 0 && ws.MaxNumVarsInBucket() >= 0) {

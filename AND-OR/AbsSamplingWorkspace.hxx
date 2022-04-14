@@ -19,7 +19,8 @@ AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_Unique ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_Knuth ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_CustomProper ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_CustomProper_DFS ;
-AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_Heuristic ;
+AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_ConditionedZEstimate ;
+AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_HeuristicSimple ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_ContextNonProper ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_RandCntxt ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_RandCntxt_Scaled ;
@@ -517,6 +518,7 @@ protected :
 
 public :
 
+	inline void set_nRandAbs(int nAbs) { _nRandAbs = ( nAbs <= 0 ? 1 : nAbs ) ; }
 	inline std::vector<int32_t> & MapVar2AbstractionContext(int var) { return _MapVar2AbstractionContext[var] ; }
 	inline int32_t MapVar2AbstractionContextNumConfigs(int var) { return _MapVar2AbstractionContextNumConfigs[var] ; }
 	inline int32_t MaxContextSize(void) { return _maxContextSize; }
