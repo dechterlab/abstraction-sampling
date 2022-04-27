@@ -2201,4 +2201,163 @@ take_next_quicksort_interval:
 	goto next_quicksort_call ;
 }
 
+double QuickSortAccumulated(void *objarray[], uint32_t len, 
+	// stack; passed in, to make this function thread-safe
+	int32_t left[32], int32_t right[32],
+	// fn to compare 2 objects
+	QuickSortGreaterCompFn CompGreaterOperator, 
+	// fn that sums node values
+	QuickSortAccumulationFn AccumulationOperator, 
+	// initial value to sum to
+	double initValueToAccumulateTo)
+{
+	int32_t l, r, i, k, m, stack ;
+	double accumulatedValue = initValueToAccumulateTo;
+	void **key, *j, *pivot ;
+
+	// qualification check
+	if (len < 2){
+		if (len == 0){
+			return initValueToAccumulateTo;
+			}
+		else{
+			(*AccumulationOperator)(accumulatedValue, objarray[0]); // just a single element, so return it's value alone as the accumulated
+			return accumulatedValue;
+			}
+		}
+
+	// input array starts from 0, we want the key array to start from 1.
+	key = objarray - 1 ;
+
+	l = 1 ;
+	r = len ;
+	stack = 0 ;
+next_quicksort_call :
+	// sort array [l,r]
+
+	i = r - l ; // i+1 objects to sort
+	if (i < 1) { // at most one key -> take next interval
+		if(i == 0){
+			(*AccumulationOperator)(accumulatedValue, key[l]); // just a single element so add it's value to the accumulated
+		}
+		goto take_next_quicksort_interval ;
+		}
+	else if (i == 1) { // two keys, sort directly
+		if ((*CompGreaterOperator)(key[l], key[r]) > 0) {
+//		if (key[l] > key[r]) {
+			j = key[l] ; key[l] = key[r] ; key[r] = j ;
+			}
+		(*AccumulationOperator)(accumulatedValue, key[l]); // add left value to accumulated
+		(*AccumulationOperator)(accumulatedValue, key[r]); // add right value to accumulated
+		goto take_next_quicksort_interval ;
+		}
+	else if (i == 2) { // three keys, sort directly
+		k = l + 1 ; // [k] is middle object
+		if ((*CompGreaterOperator)(key[l], key[k]) > 0) {
+//		if (key[l] > key[k]) {
+			if ((*CompGreaterOperator)(key[r], key[l]) >= 0) {
+//			if (key[r] >= key[l]) { // switch l and k
+				j = key[k] ; key[k] = key[l] ; key[l] = j ;
+				}
+			// else : now left one is the largest
+			else if ((*CompGreaterOperator)(key[r], key[k]) > 0) {
+//			else if (key[r] > key[k]) { // rotate left				
+				j = key[l] ; key[l] = key[k] ; key[k] = key[r] ; key[r] = j ;
+				}
+			else { // switch l and r (middle one is at least as large as r)
+				j = key[l] ; key[l] = key[r] ; key[r] = j ;
+				}
+			}
+		else if ((*CompGreaterOperator)(key[k], key[r]) > 0) {
+//		else if (key[k] > key[r]) {
+			if ((*CompGreaterOperator)(key[l], key[r]) > 0) {
+//			if (key[l] > key[r]) { // rotate right 
+				j = key[r] ; key[r] = key[k] ; key[k] = key[l] ; key[l] = j ;
+				}
+			else { // switch l+1 and r
+				j = key[k] ; key[k] = key[r] ; key[r] = j ;
+				}
+			}
+		(*AccumulationOperator)(accumulatedValue, key[l]); // add left value to accumulated
+		(*AccumulationOperator)(accumulatedValue, key[k]); // add middle value to accumulated
+		(*AccumulationOperator)(accumulatedValue, key[r]); // add right value to accumulated
+		// else everything is fine
+		goto take_next_quicksort_interval ;
+		}
+
+	// more than 3 elements left
+	// ********** general QuickSort procedure **********
+	// find median of the first, last and middle
+	k = (l + r) >> 1 ;
+	if ((*CompGreaterOperator)(key[l], key[k]) > 0) {
+//	if (key[l] > key[k]) {
+		if ((*CompGreaterOperator)(key[r], key[l]) >= 0) {
+//		if (key[r] >= key[l]) {
+			j = key[k] ; key[k] = key[l] ; key[l] = j ;
+			}
+		else if ((*CompGreaterOperator)(key[r], key[k]) > 0) {
+//		else if (key[r] > key[k]) {
+			j = key[l] ; key[l] = key[k] ; key[k] = key[r] ; key[r] = j ;
+			}
+		else {
+			j = key[l] ; key[l] = key[r] ; key[r] = j ;
+			}
+		}
+	else if ((*CompGreaterOperator)(key[k], key[r]) > 0) {
+//	else if (key[k] > key[r]) {
+		if ((*CompGreaterOperator)(key[l], key[r]) > 0) {
+//		if (key[l] > key[r]) {
+			j = key[r] ; key[r] = key[k] ; key[k] = key[l] ; key[l] = j ;
+			}
+		else {
+			j = key[k] ; key[k] = key[r] ; key[r] = j ;
+			}
+		}
+
+	// now, l < k < r and key[l]<key[k]<key[r] -> i.e. key[k] is median of [l],[k],[r]
+
+	m = i = l + 1 ; // i scans from left; we already know key[l] < key[k] and we will end up using key[k] as pivot so key[l] is already on correct side (so start from l+1)
+	j = key[k] ; key[k] = key[i] ; key[i] = j ; // switch i and k (k is the median of the first, middle and last)
+	k = r ; // k scans from right
+	pivot = key[i] ;
+	while (i < k) {
+//		++i ; while (pivot > key[i]) i++ ;
+		for (++i ; (*CompGreaterOperator)(pivot, key[i]) > 0 ; i++) ;
+//		--k ; while (key[k] > pivot) k-- ;
+		for (--k ; (*CompGreaterOperator)(key[k], pivot) > 0 ; k--) ;
+		// now key[i] > pivot and key[k] < pivot (i and k may have crossed at this point)
+		j = key[i] ; key[i] = key[k] ; key[k] = j ; //swap key[i] and key[k]
+		}
+	// k =< i at this point
+	j = key[k] ; key[k] = key[m] ; key[m] = key[i] ; key[i] = j ; //swap pivot (key[m]) with key[k] to place it in it's proper location
+	(*AccumulationOperator)(accumulatedValue, key[k]); // add pivot value to accumulated
+
+	m = k - 1 ; //now m = last element before placed pivot
+	k = k + 1 ; //now k = first element after placed pivot
+	// sort [l,m] and [k,r]
+	if ((m - l) > (r - k)) { // sort smaller (right) side ([k,k]) first -> push [l,m]
+		// "stack" acts as an index into the most recently added element to the "left" and "right" stacks (which are just arrays)
+		left[stack] = l ; // add a new left border to the stack "left"
+		right[stack++] = m ; // add a new right border to the stack "right"
+		l = k ; // prepare for sorting the right side of the pivot since it was smaller
+		goto next_quicksort_call ;
+		}
+	else { // left side first, push [k,r]
+		// "stack" acts as an index into the most recently added element to the "left" and "right" stacks (which are just arrays)
+		left[stack] = k ; // add a new left border to the stack "left"
+		right[stack++] = r ; // add a new right border to the stack "right"
+		r = m ; // prepare for sorting the left side of the pivot since it was smaller
+		goto next_quicksort_call ;
+		}
+
+take_next_quicksort_interval:
+	if (stack < 1) {
+		return accumulatedValue;
+		}
+
+	l = left[--stack] ;
+	r = right[stack] ;
+	goto next_quicksort_call ;
+}
+
 

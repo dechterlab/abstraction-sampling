@@ -121,7 +121,6 @@ private :
 // *****************************************************************************************************
 
 public :
-
 	inline uint32_t GetSize(void) const { return m_size ; }
 	inline uint32_t GetSpace(void) const { return m_allocated_space ; }
 	inline uint32_t GetFirstUsedBlockIndex(void) const { return m_first_used_block ; }

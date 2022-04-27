@@ -90,25 +90,25 @@ int main(int argc, char* argv[])
 	int nParams = argc ;
 	unsigned long randomGeneratorSeed = 0 ;
 	std::string problem_filename, evidence_filename, vo_filename ;
-	std::string tree_type = "OR";
+	std::string tree_type = "AO";
 	int32_t nrunstodo = 1 ;
 	int32_t nArgs = (nParams-1)>>1 ;
-	int32_t nContext = 0, nAbs = -1 ;
+	int32_t nContext = INT32_MAX, nAbs = -1 ;
 	int32_t time_limit = 60;
 	int32_t print_period = 1;
 	int64_t nLevelsLimit = INT64_MAX ;
 	bool findPracticalVariableOrder = true ;
-	bool properAlg = true ;
+	bool properAlg = false ;
 	bool verbose = false ;
 	bool abs_indv = false ;
 	bool exclude_prep_time = false;
-	bool forORtreetype_use_DFS_order = false;
+	// bool forORtreetype_use_DFS_order = false;
 	int iB = -1 ;
 	ARE::VarElimOrderComp::ObjectiveToMinimize objCodePrimary = ARE::VarElimOrderComp::Width, objCodeSecondary = ARE::VarElimOrderComp::None ;
 	std::string algorithm ;
 	double hscale = 1.0 ; //no scaling
 	double wscale = 1.0 ; //no scaling
-	double wscaleDecayCoefficient = 1.0 ; //no decay
+	double wscaleDecayRate = 1.0 ; //no decay
 	double exactZ = 0.0;
 
 	if (1 + 2*nArgs != nParams) {
@@ -151,8 +151,8 @@ int main(int argc, char* argv[])
 			hscale = atof(sArg.c_str());
 		else if (0 == stricmp("-wscale", sArgID.c_str()))
 			wscale = atof(sArg.c_str());
-		else if (0 == stricmp("-wscaleDecayCoefficient", sArgID.c_str()))
-			wscaleDecayCoefficient = atof(sArg.c_str());
+		else if (0 == stricmp("-wscaleDecayRate", sArgID.c_str()))
+			wscaleDecayRate = atof(sArg.c_str());
 		else if (0 == stricmp("-fpvo", sArgID.c_str()))
 			findPracticalVariableOrder = '1' == sArg[0] || 'y' == sArg[0] || 'Y' == sArg[0] ;
 		else if (0 == stricmp("-proper", sArgID.c_str()))
@@ -161,8 +161,8 @@ int main(int argc, char* argv[])
 			abs_indv = '1' == sArg[0] || 'y' == sArg[0] || 'Y' == sArg[0] ;
 		else if (0 == stricmp("-xPrepTime", sArgID.c_str()))
 			exclude_prep_time = '1' == sArg[0] || 'y' == sArg[0] || 'Y' == sArg[0];
-		else if (0 == stricmp("-xORdfs", sArgID.c_str()))
-			forORtreetype_use_DFS_order = '1' == sArg[0] || 'y' == sArg[0] || 'Y' == sArg[0];
+		// else if (0 == stricmp("-xORdfs", sArgID.c_str()))
+		// 	forORtreetype_use_DFS_order = '1' == sArg[0] || 'y' == sArg[0] || 'Y' == sArg[0];
 		else if (0 == stricmp("-O1", sArgID.c_str()))
 			objCodePrimary = (ARE::VarElimOrderComp::ObjectiveToMinimize) atoi(sArg.c_str()) ;
 		else if (0 == stricmp("-O2", sArgID.c_str()))
@@ -241,70 +241,77 @@ int main(int argc, char* argv[])
 #endif 
 
 //	AndOrSearchSpace::AbsSamplingWorkspace ws(AbsSamplingTwoAndNodeCompare_Unique) ;
-	AbsSamplingCompFn *fn = AbsSamplingTwoAndNodeCompare_Knuth ;
-	bool alg_is_DFS = true ;
-	bool abs_is_randomized = 0 == stricmp("rand", algorithm.c_str()) ;
-	bool abs_is_dynamic = algorithm.find("dynamic") != std::string::npos ;
-	if (abs_is_randomized) {
-		if (nAbs <= 0) nAbs = 1 ;
-		}
-	if (algorithm.length() > 0) {
-		if (0 == stricmp("unique", algorithm.c_str())) 
-			fn = AbsSamplingTwoAndNodeCompare_Unique ;
-		else {
-			if (! properAlg) {
-				if (abs_is_dynamic){
-					if(algorithm.find("HBSimple") != std::string::npos)
-						fn = AbsSamplingTwoAndNodeCompare_HeuristicSimple ;
-					}
-				else if (abs_is_randomized) {
-					if(hscale != 1.0 || wscale != 1.0)
-						fn = AbsSamplingTwoAndNodeCompare_RandCntxt_Scaled ;
-					else
-						fn = AbsSamplingTwoAndNodeCompare_RandCntxt ;
-					}
-				else 
-					fn = AbsSamplingTwoAndNodeCompare_ContextNonProper ;
-				}
-			else {
-				if (abs_is_randomized) 
-					fn = AbsSamplingTwoAndNodeCompare_RandCntxt ;
-				else if (0 == stricmp("customproper", algorithm.c_str()) || 0 == stricmp("context", algorithm.c_str())) 
-					fn = alg_is_DFS ? AbsSamplingTwoAndNodeCompare_CustomProper_DFS : AbsSamplingTwoAndNodeCompare_CustomProper ;
-				}
-			}
-		}
-	AndOrSearchSpace::AbsSamplingWorkspace ws(fn) ;
+	// AbsSamplingCompFn *fn = AbsSamplingTwoAndNodeCompare_Knuth ;
+	// bool alg_is_DFS = true ;
+	// bool abs_is_randomized = 0 == stricmp("rand", algorithm.c_str()) ;
+	// bool abs_is_dynamic = algorithm.find("dynamic") != std::string::npos ;
+	// if (abs_is_randomized) {
+	// 	if (nAbs <= 0) nAbs = 1 ;
+	// 	}
+	// if (algorithm.length() > 0) {
+	// 	if (0 == stricmp("unique", algorithm.c_str())) 
+	// 		fn = AbsSamplingTwoAndNodeCompare_Unique ;
+	// 	else {
+	// 		if (! properAlg) {
+	// 			if (abs_is_dynamic){
+	// 				if(algorithm.find("HBSimple") != std::string::npos)
+	// 					fn = AbsSamplingTwoAndNodeCompare_HeuristicSimple ;
+	// 				}
+	// 			else if (abs_is_randomized) {
+	// 				if(hscale != 1.0 || wscale != 1.0)
+	// 					fn = AbsSamplingTwoAndNodeCompare_RandCntxt_Scaled ;
+	// 				else
+	// 					fn = AbsSamplingTwoAndNodeCompare_RandCntxt ;
+	// 				}
+	// 			else 
+	// 				fn = AbsSamplingTwoAndNodeCompare_ContextNonProper ;
+	// 			}
+	// 		else {
+	// 			if (abs_is_randomized) 
+	// 				fn = AbsSamplingTwoAndNodeCompare_RandCntxt ;
+	// 			else if (0 == stricmp("customproper", algorithm.c_str()) || 0 == stricmp("context", algorithm.c_str())) 
+	// 				fn = alg_is_DFS ? AbsSamplingTwoAndNodeCompare_CustomProper_DFS : AbsSamplingTwoAndNodeCompare_CustomProper ;
+	// 			}
+	// 		}
+	// 	}
+
+	bool isAO = true;
+	if(tree_type == "OR"){
+		isAO = false;
+	}
+	else if(tree_type != "AO"){
+		return 44;
+	}
+
+	AS_FXNS abs_fxn = AS_FXNS_MAP.at(algorithm);
+	AS_ALG alg(abs_fxn, nAbs, isAO, properAlg, nLevelsLimit, hscale, wscale, wscaleDecayRate, abs_indv);
+	AndOrSearchSpace::AbsSamplingWorkspace ws(alg) ;
 
 	int resWSinit = ws.Initialize(p, true, NULL, false) ;
 	if (0 != resWSinit) 
 		return 50 ;
-	ws.ForORtreetype_use_DFS_order() = forORtreetype_use_DFS_order ;
+	// ws.ForORtreetype_use_DFS_order() = forORtreetype_use_DFS_order ;
 
-	if (nLevelsLimit < 0) nLevelsLimit = 0 ;
-	ws.nLevelsLimit() = nLevelsLimit ;
+	// if (nLevelsLimit < 0) nLevelsLimit = 0 ;
+	// ws.nLevelsLimit() = nLevelsLimit ;
 
-	if (hscale > 0) ws.hscale() = hscale ;
-	else return 71;
+	// if (hscale > 0) ws.hscale() = hscale ;
+	// else return 71;
 
-	if (wscale > 0) ws.wscale() = wscale ;
-	else return 72;
+	// if (wscale > 0) ws.wscale() = wscale ;
+	// else return 72;
 
-	if (wscaleDecayCoefficient > 0 && wscaleDecayCoefficient <= 1.0) ws.wscaleDecayCoefficient() = wscaleDecayCoefficient ;
-	else return 73;
+	// if (wscaleDecayRate > 0 && wscaleDecayRate <= 1.0) ws.wscaleDecayRate() = wscaleDecayRate ;
+	// else return 73;
 
-	bool isAO = false;
-	if(tree_type == "AO"){
-		isAO = true;
-	}
 	int resCB = ws.CreateBuckets(isAO, true /* keep original bucket signatures; later when do MB processing, don't want to overwrite orig signature */, true, false) ;
 	if (0 != resCB) 
 		return 51 ;
 //	int resCB = ws.CreateBuckets(true, true, false, isAO) ;
 
-	if(abs_is_dynamic) {
-		ws.set_nRandAbs(nAbs);
-		}
+	// if(abs_is_dynamic) {
+	// 	ws.set_nRandAbs(nAbs);
+	// 	}
 
 	// NOTE : the MaxNumVarsInBucket() is BE (not MBE) based!!! i.e. as if i-bound=inf
 	if (p.VarOrdering_InducedWidth() < 0 && ws.MaxNumVarsInBucket() >= 0) {
@@ -420,10 +427,10 @@ int main(int argc, char* argv[])
 	if (nLevelsLimit >= 0 && nLevelsLimit < 9000){
 		snContext = std::to_string(nContext) + "_" + std::to_string(nLevelsLimit);
 		}
-    output_filename = abs_is_randomized ? 
-		(problem_filename + "-" + tree_type + "-i-" + std::to_string(iB) + "-prop-" + (properAlg ? "1" : "0") + "-a-" + algorithm + "-nC-"  + snContext + "-nAbs-"  + snAbs + "-abs_indv-" + sabs_indv + "-nR-" +  std::to_string(nrunstodo) + "-hscale-" + std::to_string(int(hscale*100)) + "-wscale-" + std::to_string(int(wscale*100))  + "-wdecay-" + std::to_string(int(wscaleDecayCoefficient*100)) +".out") 
+    output_filename = (alg.randomized || alg.dynamic) ? 
+		(problem_filename + "-" + tree_type + "-i-" + std::to_string(iB) + "-prop-" + (properAlg ? "1" : "0") + "-a-" + algorithm + "-nC-"  + snContext + "-nAbs-"  + snAbs + "-abs_indv-" + sabs_indv + "-nR-" +  std::to_string(nrunstodo) + "-hscale-" + std::to_string(int(hscale*100)) + "-wscale-" + std::to_string(int(wscale*100))  + "-wdecay-" + std::to_string(int(wscaleDecayRate*100)) +".out") 
 	    :
-		(problem_filename + "-" + tree_type + "-i-" + std::to_string(iB) + "-prop-" + (properAlg ? "1" : "0") + "-a-" + algorithm + "-nC-"  + snContext + "-nR-" +  std::to_string(nrunstodo) + "-hscale-" + std::to_string(int(hscale*100)) + "-wscale-" + std::to_string(int(wscale*100))  + "-wdecay-" + std::to_string(int(wscaleDecayCoefficient*100)) +".out") ;
+		(problem_filename + "-" + tree_type + "-i-" + std::to_string(iB) + "-prop-" + (properAlg ? "1" : "0") + "-a-" + algorithm + "-nC-"  + snContext + "-nR-" +  std::to_string(nrunstodo) + "-hscale-" + std::to_string(int(hscale*100)) + "-wscale-" + std::to_string(int(wscale*100))  + "-wdecay-" + std::to_string(int(wscaleDecayRate*100)) +".out") ;
     output_file = fopen(output_filename.c_str(), "w");
     fprintf(output_file, "%s \t%d \t%s \t%s \t%d \t%d \t%d \t%d \t%d \t%g \t%g \t%lld \t%c \t%s\n", 
 		problem_filename.c_str(), (int) iB, algorithm.c_str(), snContext.c_str(), (int) nrunstodo, (int) (AS_VERSION), 
@@ -478,7 +485,7 @@ int main(int argc, char* argv[])
 		printf("\nFAILED ABS SEARCH TREE PREP; res=%d ...", resPREP) ;
 		}
 
-	if (abs_is_randomized) {
+	if (alg.randomized) {
 		int res_RAsetup = ws.ComputeRandAbstractionFactors(nAbs) ;
 		if (0 != res_RAsetup) {
 			printf("\nFAILED ComputeRandAbstractionFactors(%d) ...", nAbs) ;
@@ -514,7 +521,7 @@ int main(int argc, char* argv[])
 		// compute tree value
 		int resTV = ws.ComputeSearchTreeValue() ;
 #else
-		if (abs_is_randomized && abs_indv) {
+		if (alg.randomized && abs_indv) {
 			int res_RAC_setup = ws.ComputeRandAbstractionFactors_Indv() ;
 			}
 		int32_t resTV = properAlg ? ws.RunDFS() : ws.RunDFS_nonProper(dDeepestBucketExpanded, nDFSBranchingPointsProcessed) ;

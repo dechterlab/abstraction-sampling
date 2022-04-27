@@ -47,7 +47,7 @@ FILE *fpLOG = fopen("C:\\UCI\\ARP\\AND-OR\\log.txt", "w") ;
 
 	// temp array for sort keys
 	std::vector<int32_t> sort_keys ;
-	if (AbsSamplingTwoAndNodeCompare_RandCntxt == _CompFn || AbsSamplingTwoAndNodeCompare_RandCntxt_Scaled  == _CompFn) 
+	if (AbsSamplingTwoAndNodeCompare_RandCntxt == _CompFn) 
 		sort_keys.reserve(100) ;
 
 	// temporary arrays of AND openlist nodes
@@ -227,100 +227,101 @@ expand_more :
 				OL_from = OL_to ; OL_to.clear() ;
 				}
 			}
-		// randomized abstractions; compute abs index for each node, sort and merge
-		else if (AbsSamplingTwoAndNodeCompare_RandCntxt == _CompFn) {
-			sort_keys.clear() ;
-			if (sort_keys.capacity() < OL_to.size()) sort_keys.reserve(OL_to.size()) ;
-			// loop through nodes in the open list and push back their associated abstract state to the list sort_keys
-			for (int32_t idx_ = 0 ; idx_< OL_to.size() ; ++idx_) {
-				AndOrSearchSpace::SearchAndNode_WithPath *n = OL_to[idx_] ;
-				sort_keys.push_back(ComputeNodeAbstrationID(*n)) ;
-				}
-			// sort the open list nodes based on the abstract states of the nodes recorded in sort_keys
-			QuickSortLong_i64(sort_keys.data(), OL_to.size(), (int64_t*) OL_to.data(), left, right) ;
-			// go through the output openlist and do IS merges
-			int32_t idxS = 0, idxE = -1 ;
-			// iterate through the the nodes until we reach a node with a new abstract state, at which point merge all the previous nodes (which all had the same abstract state)
-			for (idxE = idxS+1 ; idxE < OL_to.size() ; ++idxE) {
-				if (sort_keys[idxS] != sort_keys[idxE]) {
-					SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
-					idxS = idxE ;
-					OL_from.push_back(an_merged) ; // the resulting open list containing the selected representitives
+		else if (!_scaling){
+			// randomized abstractions; compute abs index for each node, sort and merge
+			if (AbsSamplingTwoAndNodeCompare_RandCntxt == _CompFn) {
+				sort_keys.clear() ;
+				if (sort_keys.capacity() < OL_to.size()) sort_keys.reserve(OL_to.size()) ;
+				// loop through nodes in the open list and push back their associated abstract state to the list sort_keys
+				for (int32_t idx_ = 0 ; idx_< OL_to.size() ; ++idx_) {
+					AndOrSearchSpace::SearchAndNode_WithPath *n = OL_to[idx_] ;
+					sort_keys.push_back(ComputeNodeAbstrationID(*n)) ;
 					}
-				}
-			SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
-			OL_from.push_back(an_merged) ;
-			}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//// Bobak /////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		// randomized abstractions; compute abs index for each node, sort and merge with scaled q
-		else if (AbsSamplingTwoAndNodeCompare_RandCntxt_Scaled == _CompFn) {
-			sort_keys.clear() ;
-			if (sort_keys.capacity() < OL_to.size()) sort_keys.reserve(OL_to.size()) ;
-			for (int32_t idx_ = 0 ; idx_< OL_to.size() ; ++idx_) {
-				AndOrSearchSpace::SearchAndNode_WithPath *n = OL_to[idx_] ;
-				sort_keys.push_back(ComputeNodeAbstrationID(*n)) ;
-				}
-			QuickSortLong_i64(sort_keys.data(), OL_to.size(), (int64_t*) OL_to.data(), left, right) ;
-			// go through the output openlist and do IS merges
-			int32_t idxS = 0, idxE = -1 ;
-			for (idxE = idxS+1 ; idxE < OL_to.size() ; ++idxE) {
-				if (sort_keys[idxS] != sort_keys[idxE]) {
-					SearchAndNode_WithPath *an_merged = DoScaledISmerge(OL_to, idxS, idxE, _hscale, _wscale) ;
-					idxS = idxE ;
-					OL_from.push_back(an_merged) ;
+				// sort the open list nodes based on the abstract states of the nodes recorded in sort_keys
+				QuickSortLong_i64(sort_keys.data(), OL_to.size(), (int64_t*) OL_to.data(), left, right) ;
+				// go through the output openlist and do IS merges
+				int32_t idxS = 0, idxE = -1 ;
+				// iterate through the the nodes until we reach a node with a new abstract state, at which point merge all the previous nodes (which all had the same abstract state)
+				for (idxE = idxS+1 ; idxE < OL_to.size() ; ++idxE) {
+					if (sort_keys[idxS] != sort_keys[idxE]) {
+						SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
+						idxS = idxE ;
+						OL_from.push_back(an_merged) ; // the resulting open list containing the selected representitives
+						}
 					}
-				}
-			SearchAndNode_WithPath *an_merged = DoScaledISmerge(OL_to, idxS, idxE, _hscale, _wscale) ;
-			OL_from.push_back(an_merged) ;
-			}
-		// heuristic-based sorting
-		else if (AbsSamplingTwoAndNodeCompare_HeuristicSimple == _CompFn){
-			//NOTE: currently assumes nodes are from the same variable since DFS
-			//do a Knuth abstraction if reached _nLevelsLimit
-			AndOrSearchSpace::SearchAndNode *temp_n = (AndOrSearchSpace::SearchAndNode*) OL_to[0] ;
-			if (_nLevelsLimit >= 0 && _NumberOfAncestorBranchingVariables[temp_n->V()] >= _nLevelsLimit) {
-				SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, 0, OL_to.size()-1);
+				SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
 				OL_from.push_back(an_merged) ;
-			}
+				}
+			// heuristic-based sorting
+			else if (AbsSamplingTwoAndNodeCompare_HeuristicSimple == _CompFn){
+				//NOTE: currently assumes nodes are from the same variable since DFS
+				//do a Knuth abstraction if reached _nLevelsLimit
+				AndOrSearchSpace::SearchAndNode *temp_n = (AndOrSearchSpace::SearchAndNode*) OL_to[0] ;
+				if (_nLevelsLimit >= 0 && _NumberOfAncestorBranchingVariables[temp_n->V()] >= _nLevelsLimit) {
+					SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, 0, OL_to.size()-1);
+					OL_from.push_back(an_merged) ;
+				}
+				else {
+					if (OL_to.size() > 1) 
+						QuickSort((void**) OL_to.data(), OL_to.size(), left, right, _CompFn) ;
+					int floor_node_count_per_abs_state = OL_to.size() / _nRandAbs;
+					int num_states_remaining_needing_extra_member = OL_to.size() % _nRandAbs;
+					int num_abs_states = floor_node_count_per_abs_state == 0 ? OL_to.size() : _nRandAbs ;
+					int32_t idxS = 0, idxE = -1 ;
+					for(int abs_state = 0; abs_state < num_abs_states; ++abs_state){
+						idxE = idxS + floor_node_count_per_abs_state;
+						if(num_states_remaining_needing_extra_member > 0){
+							++idxE;
+							--num_states_remaining_needing_extra_member;
+							}
+						SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
+						idxS = idxE ;
+						OL_from.push_back(an_merged) ;
+						}
+					}
+				}
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// context-based abstraction
 			else {
+				// sort output openlist
 				if (OL_to.size() > 1) 
 					QuickSort((void**) OL_to.data(), OL_to.size(), left, right, _CompFn) ;
-				int floor_node_count_per_abs_state = OL_to.size() / _nRandAbs;
-				int num_states_remaining_needing_extra_member = OL_to.size() % _nRandAbs;
-				int num_abs_states = floor_node_count_per_abs_state == 0 ? OL_to.size() : _nRandAbs ;
+				// go through the output openlist and do IS merges
 				int32_t idxS = 0, idxE = -1 ;
-				for(int abs_state = 0; abs_state < num_abs_states; ++abs_state){
-					idxE = idxS + floor_node_count_per_abs_state;
-					if(num_states_remaining_needing_extra_member > 0){
-						++idxE;
-						--num_states_remaining_needing_extra_member;
+				for (idxE = idxS+1 ; idxE < OL_to.size() ; ++idxE) {
+					int32_t comp_res = (*_CompFn)(OL_to[idxS], OL_to[idxE]) ;
+					if (0 != comp_res) {
+						SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
+						idxS = idxE ;
+						OL_from.push_back(an_merged) ;
 						}
-					SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
-					idxS = idxE ;
-					OL_from.push_back(an_merged) ;
 					}
+				SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
+				OL_from.push_back(an_merged) ;
 				}
 			}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		// context-based abstraction
-		else {
-			// sort output openlist
-			if (OL_to.size() > 1) 
-				QuickSort((void**) OL_to.data(), OL_to.size(), left, right, _CompFn) ;
-			// go through the output openlist and do IS merges
-			int32_t idxS = 0, idxE = -1 ;
-			for (idxE = idxS+1 ; idxE < OL_to.size() ; ++idxE) {
-				int32_t comp_res = (*_CompFn)(OL_to[idxS], OL_to[idxE]) ;
-				if (0 != comp_res) {
-					SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
-					idxS = idxE ;
-					OL_from.push_back(an_merged) ;
+		else{ //scaling either h or w during abstractions
+			// randomized abstractions; compute abs index for each node, sort and merge with scaled q
+			if (AbsSamplingTwoAndNodeCompare_RandCntxt == _CompFn) {
+				sort_keys.clear() ;
+				if (sort_keys.capacity() < OL_to.size()) sort_keys.reserve(OL_to.size()) ;
+				for (int32_t idx_ = 0 ; idx_< OL_to.size() ; ++idx_) {
+					AndOrSearchSpace::SearchAndNode_WithPath *n = OL_to[idx_] ;
+					sort_keys.push_back(ComputeNodeAbstrationID(*n)) ;
 					}
+				QuickSortLong_i64(sort_keys.data(), OL_to.size(), (int64_t*) OL_to.data(), left, right) ;
+				// go through the output openlist and do IS merges
+				int32_t idxS = 0, idxE = -1 ;
+				for (idxE = idxS+1 ; idxE < OL_to.size() ; ++idxE) {
+					if (sort_keys[idxS] != sort_keys[idxE]) {
+						SearchAndNode_WithPath *an_merged = DoScaledISmerge(OL_to, idxS, idxE, _hscale, _wscale) ;
+						idxS = idxE ;
+						OL_from.push_back(an_merged) ;
+						}
+					}
+				SearchAndNode_WithPath *an_merged = DoScaledISmerge(OL_to, idxS, idxE, _hscale, _wscale) ;
+				OL_from.push_back(an_merged) ;
 				}
-			SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
-			OL_from.push_back(an_merged) ;
 			}
 
 // done with generating next-level frontier; note OL_from contains newly generated nodes

@@ -81,4 +81,12 @@ void QuickSort(void *objarray[], uint32_t len,
 	// fn to compare 2 objects
 	QuickSortGreaterCompFn CompGreaterOperator) ;
 
+typedef void (*QuickSortAccumulationFn)(double& accumulatedValue, void *Obj) ;
+double QuickSortSummed(void *objarray[], uint32_t len, 
+	// stack; passed in, to make this function thread-safe
+	int32_t left[32], int32_t right[32],
+	// fn to compare 2 objects
+	QuickSortGreaterCompFn CompGreaterOperator,
+	QuickSortAccumulationFn AccumulationOperator, double initValueToAccumulateTo) ;
+
 #endif // SORT_HXX_INCLUDED

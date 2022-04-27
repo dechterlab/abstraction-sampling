@@ -892,39 +892,99 @@ int32_t AbsSamplingTwoAndNodeCompare_RandCntxt(void *Obj1, void *Obj2)
 	return a1 < a2 ? -1 : 1 ;
 }
 
+// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// //// Bobak /////////////////////////////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// //TODO:	this is just a copy of ^^ AbsSamplingTwoAndNodeCompare_RandCntxt(void *Obj1, void *Obj2)
+// //		would be nice to have a separate parameter for whether to scale q based on the heuristic
+// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// int32_t AbsSamplingTwoAndNodeCompare_RandCntxt_Scaled(void *Obj1, void *Obj2)
+// // we assume all AND nodes are instances of SearchAndNode_WithPath class.
+// // we will compare the two nodes along the path from Obj1/Obj2 to the root; 
+// // some nodes on the path may not be in the context.
+// // we also assume that '_PathAssignment' member variable of a1/a2 is full path assigment, from a1/a2 to the root, not from a1/a2 to the closest branching variable.
+// {
+// 	if (Obj1 == Obj2) 
+// 		return 0 ;
+
+// 	AndOrSearchSpace::SearchAndNode_WithPath *A1 = (AndOrSearchSpace::SearchAndNode_WithPath*) Obj1 ;
+// 	AndOrSearchSpace::SearchAndNode_WithPath *A2 = (AndOrSearchSpace::SearchAndNode_WithPath*) Obj2 ;
+// 	AndOrSearchSpace::AbsSamplingWorkspace *ws = A1->WS() ;
+
+// 	if (A1->V() < 0) 
+// 		return 0 ;
+// 	if (A1->V() < A2->V()) 
+// 		return -1 ;
+// 	if (A1->V() > A2->V()) 
+// 		return 1 ;
+
+// 	// AND nodes have the same variable now.
+
+// 	int a1 = A1->WS()->ComputeNodeAbstrationID(*A1) ;
+// 	int a2 = A2->WS()->ComputeNodeAbstrationID(*A2) ;
+// 	if (a1 == a2) 
+// 		return 0 ;
+// 	return a1 < a2 ? -1 : 1 ;
+// }
+// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //// Bobak /////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//TODO:	this is just a copy of ^^ AbsSamplingTwoAndNodeCompare_RandCntxt(void *Obj1, void *Obj2)
-//		would be nice to have a separate parameter for whether to scale q based on the heuristic
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int32_t AbsSamplingTwoAndNodeCompare_RandCntxt_Scaled(void *Obj1, void *Obj2)
+void AccumulateNodeLogHeuristicValue(double& accumulatedValue, void *Obj1)
 // we assume all AND nodes are instances of SearchAndNode_WithPath class.
 // we will compare the two nodes along the path from Obj1/Obj2 to the root; 
 // some nodes on the path may not be in the context.
 // we also assume that '_PathAssignment' member variable of a1/a2 is full path assigment, from a1/a2 to the root, not from a1/a2 to the closest branching variable.
 {
-	if (Obj1 == Obj2) 
-		return 0 ;
-
-	AndOrSearchSpace::SearchAndNode_WithPath *A1 = (AndOrSearchSpace::SearchAndNode_WithPath*) Obj1 ;
-	AndOrSearchSpace::SearchAndNode_WithPath *A2 = (AndOrSearchSpace::SearchAndNode_WithPath*) Obj2 ;
-	AndOrSearchSpace::AbsSamplingWorkspace *ws = A1->WS() ;
-
-	if (A1->V() < 0) 
-		return 0 ;
-	if (A1->V() < A2->V()) 
-		return -1 ;
-	if (A1->V() > A2->V()) 
-		return 1 ;
-
-	// AND nodes have the same variable now.
-
-	int a1 = A1->WS()->ComputeNodeAbstrationID(*A1) ;
-	int a2 = A2->WS()->ComputeNodeAbstrationID(*A2) ;
-	if (a1 == a2) 
-		return 0 ;
-	return a1 < a2 ? -1 : 1 ;
+	AndOrSearchSpace::SearchAndNode_WithPath *n = (AndOrSearchSpace::SearchAndNode_WithPath*) Obj1 ;
+	LOG_OF_SUM_OF_TWO_NUMBERS_GIVEN_AS_LOGS(accumulatedValue, accumulatedValue, n->h())
 }
+
+// enum AS_FXNS {no_abs_fxn_specified=-1, unique=0, customproper_dfs, customproper_bfs, relCB_dfs, relCB_bfs, randCB_dfs, simpleHB_dfs, balancedHB_dfs} ;
+const std::unordered_map<std::string, AS_FXNS> AS_FXNS_MAP{
+		{"no_abs_fxn_specified", no_abs_fxn_specified},
+		{"unique", unique},
+		{"customproper_dfs", customproper_dfs},
+		{"customproper_bfs", customproper_bfs},
+		{"relCB_dfs", relCB_dfs},
+		{"relCB_bfs", relCB_bfs},
+		{"randCB_dfs", randCB_dfs},
+		{"simpleHB_dfs", simpleHB_dfs},
+		{"balancedHB_dfs", balancedHB_dfs}
+	} ;
+AbsSamplingCompFn* AS_NODE_COMP_FNS[8] {
+		&AbsSamplingTwoAndNodeCompare_Unique, //unique
+		&AbsSamplingTwoAndNodeCompare_CustomProper_DFS, //customproper_dfs
+		&AbsSamplingTwoAndNodeCompare_CustomProper, //customproper_bfs
+		&AbsSamplingTwoAndNodeCompare_CustomProper_DFS, //context_dfs
+		&AbsSamplingTwoAndNodeCompare_CustomProper, //context_bfs
+		&AbsSamplingTwoAndNodeCompare_RandCntxt, //rand
+		&AbsSamplingTwoAndNodeCompare_HeuristicSimple, //HBSimple
+		nullptr //HBEqualDist
+	} ;
+AbsSamplingAccumFn* AS_ACCUM_FNS[8] {
+		nullptr, //unique
+		nullptr, //customproper_dfs
+		nullptr, //customproper_bfs
+		nullptr, //context_dfs
+		nullptr, //context_bfs
+		nullptr, //rand
+		nullptr, //HBSimple
+		&AccumulateNodeLogHeuristicValue //HBEqualDist
+	} ;
+// enum AS_ALG_PROPERTY_IDX {dfs=0, randomized, dynamic} ;
+bool AS_ALG_PROPERTIES[8][3] {
+		{true, false, false}, //unique
+		{true, false, false}, //customproper_dfs
+		{false, false, false}, //customproper_bfs
+		{true, false, false}, //context_dfs
+		{false, false, false}, //context_bfs
+		{true, true, false}, //rand
+		{true, false, true}, //HBSimple
+		{true, false, true} //HBEqualDist
+	} ;
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

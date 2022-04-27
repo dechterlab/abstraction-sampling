@@ -1,7 +1,9 @@
 #ifndef AbsSamplingWorkspace_HXX_INCLUDED
 #define AbsSamplingWorkspace_HXX_INCLUDED
 
+#include <string>
 #include <vector>
+#include <unordered_map>
 #include <utility>
 
 #include "AVLtreeObjects.hxx"
@@ -23,7 +25,73 @@ AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_ConditionedZEstimate ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_HeuristicSimple ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_ContextNonProper ;
 AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_RandCntxt ;
-AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_RandCntxt_Scaled ;
+// AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_RandCntxt_Scaled ;
+
+typedef void (AbsSamplingAccumFn)(double& accumulatedValue, void *Obj) ;
+AbsSamplingAccumFn AccumulateNodeLogHeuristicValue ;
+
+enum AS_FXNS {no_abs_fxn_specified=-1, unique=0, customproper_dfs, customproper_bfs, relCB_dfs, relCB_bfs, randCB_dfs, simpleHB_dfs, balancedHB_dfs} ;
+enum AS_ALG_PROPERTY_IDX {dfs=0, randomized, dynamic} ;
+extern const std::unordered_map<std::string, AS_FXNS> AS_FXNS_MAP ;
+extern AbsSamplingCompFn* AS_NODE_COMP_FNS[8] ;
+extern AbsSamplingAccumFn* AS_ACCUM_FNS[8] ;
+extern bool AS_ALG_PROPERTIES[8][3] ;
+
+struct AS_ALG {
+	AS_FXNS abs_fxn = AS_FXNS::no_abs_fxn_specified;
+	AbsSamplingCompFn* node_comp_fxn = nullptr;
+	AbsSamplingAccumFn* accum_fn = nullptr;
+	int nAbs = -1;
+	bool AO = true;
+	bool proper = false;
+	bool dfs = true;
+	bool randomized = false;
+	bool dynamic = false;
+	int nLevelsLimit = INT_MAX;
+	double hscale = 1;
+	double wscale = 1;
+	double wscaleDecayRate = 0.25;
+	bool absIndv = false;
+
+	AS_ALG(AS_FXNS abs_fxn_, 
+		   int nAbs_,  bool AO_,  bool proper_, 
+		   int nLevelsLimit_,  double hscale_,
+		   double wscale_, double wscaleDecayRate_, bool absIndv_)
+		:	abs_fxn(abs_fxn_),
+			node_comp_fxn(AS_NODE_COMP_FNS[abs_fxn_]),
+			accum_fn(AS_ACCUM_FNS[abs_fxn_]),
+			nAbs(nAbs_),
+			AO(AO_),
+			proper(proper_),
+			dfs(AS_ALG_PROPERTIES[abs_fxn]),
+			randomized(AS_ALG_PROPERTIES[abs_fxn]),
+			dynamic(AS_ALG_PROPERTIES[abs_fxn]),
+			nLevelsLimit(nLevelsLimit_),
+			hscale(hscale_),
+			wscale(wscale_),
+			wscaleDecayRate(wscaleDecayRate_),
+			absIndv(absIndv_)
+			{
+				if (AS_ALG_PROPERTIES[abs_fxn_][AS_ALG_PROPERTY_IDX::randomized] || AS_ALG_PROPERTIES[abs_fxn_][AS_ALG_PROPERTY_IDX::dynamic]) {
+					if (nAbs <= 0)
+						exit(70);
+					}
+				else
+					nAbs = -1;
+
+				if (nLevelsLimit < 0)
+					exit(70);
+
+				if (hscale <= 0)
+					exit(71);
+
+				if (wscale <= 0)
+					exit(72);
+
+				if (wscaleDecayRate <= 0 || wscaleDecayRate > 1.0)
+					exit(73);
+			}
+} ;
 
 namespace AndOrSearchSpace
 {
@@ -39,15 +107,27 @@ protected :
 	// root of the AND/OR search space; var is -1; children are roots of the pseudo-tree as OR nodes.
 	SearchAndNode _Root ;
 
+	// specific abstraction sampling algorithm being used
+	AS_ALG& _Alg ;
+
+	// abstraction function being used
+	AS_FXNS _AS_FN;
+
 	// comparison fn for comparing two AND nodes; this defines the abstraction.
 	AbsSamplingCompFn *_CompFn ;
+
+	// comparison fn for comparing two AND nodes; this defines the abstraction.
+	AbsSamplingAccumFn *_AccumFn ;
+
+	// scaling h or w during sampling?
+	bool _scaling ;
 
 	// h scaling parameter.
 	double _hscale ;
 
 	// importance w scaling parameter.
 	double _wscale ;
-	double _wscaleDecayCoefficient ;
+	double _wscaleDecayRate ;
 
 public :
 
@@ -70,7 +150,7 @@ public :
 	inline double & heuristicPower(void) {return _heuristicPower; }
 	inline double & hscale(void) {return _hscale; }
 	inline double & wscale(void) {return _wscale; }
-	inline double & wscaleDecayCoefficient(void) {return _wscaleDecayCoefficient; }
+	inline double & wscaleDecayCoefficient(void) {return _wscaleDecayRate; }
 protected :
 
 	// number of nodes in the AND/OR graph; including root node.
@@ -1534,15 +1614,20 @@ done :
 	}
 
 	void decayCoefficients(){
-		_wscale = (_wscale - 1.0) * _wscaleDecayCoefficient + 1.0;
+		_wscale = (_wscale - 1.0) * _wscaleDecayRate + 1.0;
 	}
 
-	AbsSamplingWorkspace(AbsSamplingCompFn CompFn) :
+	AbsSamplingWorkspace(AS_ALG& alg_) :
 		_Root(this, -1, -1), 
-		_CompFn(CompFn), 
-		_hscale(1.00), //no scaling
-		_wscale(1.00), //no scaling
-		_wscaleDecayCoefficient(1.0), //no decay
+		_Alg(alg_),
+		_AS_FN(alg_.abs_fxn),
+		_CompFn(alg_.node_comp_fxn), 
+		_AccumFn(alg_.accum_fn), 
+		_nLevelsLimit(alg_.nLevelsLimit),
+		_hscale(alg_.hscale),
+		_wscale(alg_.wscale),
+		_wscaleDecayRate(alg_.wscaleDecayRate),
+		_scaling(alg_.hscale!=1.0 || alg_.wscale!=1.0),
 		_nNodesCreatedLimitBeforeLevellingOff(INT64_MAX), 
 		_nNodesInTree(1), 
 		_nNodesCreated(1), 
@@ -1555,10 +1640,11 @@ done :
 		_maxContextSize(-1),
 		_max_abs_context_num_configs(-1), 
 		_PTInducedWidth(-1),
-		_nRandAbs(0), 
+		_nRandAbs(alg_.nAbs), 
 		_CurrentContextValues(NULL), 
-		_OpenList(CompFn, 0, NULL, 100000, 10000) 
-	{
+		_OpenList(alg_.node_comp_fxn, 0, NULL, 100000, 10000) 
+	{	
+		_ForORtreetype_use_DFS_order = alg_.dfs ;
 	}
 
 	virtual ~AbsSamplingWorkspace(void)
