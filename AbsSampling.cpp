@@ -24,7 +24,7 @@
 // 3000002 = proper/non-proper both in same AbsSampling.cpp
 // 3000003 = randomized abstractions
 // #define AS_VERSION 3000006
-#define AS_VERSION 3000009
+#define AS_VERSION 3000011
 
 //#define PERFORM_SINGLTON_CONSISTENCY_CHECK
 
@@ -393,6 +393,7 @@ int main(int argc, char* argv[])
 	double BEvalue = ws.CompleteEliminationResult() ;
 	printf("\n MBE done; result=%g", BEvalue) ;
 */
+
 	do_moment_matching = true ;
 	int resCOFs_w = -1 ;
 	try {

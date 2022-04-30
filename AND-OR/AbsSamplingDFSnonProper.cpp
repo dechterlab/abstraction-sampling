@@ -227,6 +227,7 @@ expand_more :
 				OL_from = OL_to ; OL_to.clear() ;
 				}
 			}
+		//TODO: remove conditionals by refactoring into functions that can be selected upon AbstractionSamplingWorkspace construction
 		else if (!_scaling){
 			// randomized abstractions; compute abs index for each node, sort and merge
 			if (AbsSamplingTwoAndNodeCompare_RandCntxt == _CompFn) {
@@ -254,33 +255,79 @@ expand_more :
 				}
 			// heuristic-based sorting
 			else if (AbsSamplingTwoAndNodeCompare_HeuristicSimple == _CompFn){
-				//NOTE: currently assumes nodes are from the same variable since DFS
-				//do a Knuth abstraction if reached _nLevelsLimit
-				AndOrSearchSpace::SearchAndNode *temp_n = (AndOrSearchSpace::SearchAndNode*) OL_to[0] ;
-				if (_nLevelsLimit >= 0 && _NumberOfAncestorBranchingVariables[temp_n->V()] >= _nLevelsLimit) {
-					SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, 0, OL_to.size()-1);
-					OL_from.push_back(an_merged) ;
-				}
-				else {
-					if (OL_to.size() > 1) 
-						QuickSort((void**) OL_to.data(), OL_to.size(), left, right, _CompFn) ;
-					int floor_node_count_per_abs_state = OL_to.size() / _nRandAbs;
-					int num_states_remaining_needing_extra_member = OL_to.size() % _nRandAbs;
-					int num_abs_states = floor_node_count_per_abs_state == 0 ? OL_to.size() : _nRandAbs ;
-					int32_t idxS = 0, idxE = -1 ;
-					for(int abs_state = 0; abs_state < num_abs_states; ++abs_state){
-						idxE = idxS + floor_node_count_per_abs_state;
-						if(num_states_remaining_needing_extra_member > 0){
-							++idxE;
-							--num_states_remaining_needing_extra_member;
-							}
-						SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
-						idxS = idxE ;
+				if(_Alg.abs_fxn==simpleHB_dfs) {
+					//NOTE: currently assumes nodes are from the same variable since DFS
+					//do a Knuth abstraction if reached _nLevelsLimit
+					AndOrSearchSpace::SearchAndNode *temp_n = (AndOrSearchSpace::SearchAndNode*) OL_to[0] ;
+					if (_nLevelsLimit >= 0 && _NumberOfAncestorBranchingVariables[temp_n->V()] >= _nLevelsLimit) {
+						SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, 0, OL_to.size()-1);
 						OL_from.push_back(an_merged) ;
+					}
+					else {
+						if (OL_to.size() > 1) 
+							QuickSort((void**) OL_to.data(), OL_to.size(), left, right, _CompFn) ;
+						int floor_node_count_per_abs_state = OL_to.size() / _nRandAbs;
+						int num_states_remaining_needing_extra_member = OL_to.size() % _nRandAbs;
+						int num_abs_states = floor_node_count_per_abs_state == 0 ? OL_to.size() : _nRandAbs ;
+						int32_t idxS = 0, idxE = -1 ;
+						for(int abs_state = 0; abs_state < num_abs_states; ++abs_state){
+							idxE = idxS + floor_node_count_per_abs_state;
+							if(num_states_remaining_needing_extra_member > 0){
+								++idxE;
+								--num_states_remaining_needing_extra_member;
+								}
+							SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
+							idxS = idxE ;
+							OL_from.push_back(an_merged) ;
+							}
 						}
 					}
+				else if(_Alg.abs_fxn==balancedHB_dfs){
+					//NOTE: currently assumes nodes are from the same variable since DFS
+					//do a Knuth abstraction if reached _nLevelsLimit
+					AndOrSearchSpace::SearchAndNode *temp_n = (AndOrSearchSpace::SearchAndNode*) OL_to[0] ;
+					if (_nLevelsLimit >= 0 && _NumberOfAncestorBranchingVariables[temp_n->V()] >= _nLevelsLimit) {
+						SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, 0, OL_to.size()-1);
+						OL_from.push_back(an_merged) ;
+					}
+					else {
+						double totalAccumlationOfAllH = -INFINITY;
+						if (OL_to.size() > 1) {
+							totalAccumlationOfAllH = QuickSortAccumulated((void**) OL_to.data(), OL_to.size(), left, right, _CompFn, _AccumFn, -INFINITY);
+							}
+						else{
+							totalAccumlationOfAllH = OL_to[0]->h();
+							}
+						if (totalAccumlationOfAllH == -INFINITY) {
+							SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, 0, OL_to.size()-1) ;
+							OL_from.push_back(an_merged) ;
+							}
+						else{
+							double intervalH = totalAccumlationOfAllH - log10(_nRandAbs);
+							double currentIntervalEnd = intervalH;
+							double currentRunningAccumulation =  -INFINITY;
+							int32_t idxS = 0, idxE = -1 ;
+							while(idxS < OL_to.size()){
+								int32_t idx = idxS;
+								while(currentRunningAccumulation < currentIntervalEnd){
+									LOG_OF_SUM_OF_TWO_NUMBERS_GIVEN_AS_LOGS(currentRunningAccumulation, currentRunningAccumulation, OL_to[idx]->h())
+									++idx;
+									}
+								idxE = idx; //idx already incremented to past old index accessed above
+								SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
+								idxS = idxE ;
+								OL_from.push_back(an_merged) ;
+								while(currentIntervalEnd <= currentRunningAccumulation){
+									LOG_OF_SUM_OF_TWO_NUMBERS_GIVEN_AS_LOGS(currentIntervalEnd, currentIntervalEnd, intervalH);
+									}
+								}
+							}
+						}
+					}
+				else {
+					exit(111);
+					}
 				}
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// context-based abstraction
 			else {
 				// sort output openlist

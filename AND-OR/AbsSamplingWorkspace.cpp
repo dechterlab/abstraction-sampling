@@ -951,7 +951,7 @@ const std::unordered_map<std::string, AS_FXNS> AS_FXNS_MAP{
 		{"relCB_bfs", relCB_bfs},
 		{"randCB_dfs", randCB_dfs},
 		{"simpleHB_dfs", simpleHB_dfs},
-		{"balancedHB_dfs", balancedHB_dfs}
+		{"equalDistHB_dfs", balancedHB_dfs}
 	} ;
 AbsSamplingCompFn* AS_NODE_COMP_FNS[8] {
 		&AbsSamplingTwoAndNodeCompare_Unique, //unique
@@ -961,7 +961,7 @@ AbsSamplingCompFn* AS_NODE_COMP_FNS[8] {
 		&AbsSamplingTwoAndNodeCompare_CustomProper, //context_bfs
 		&AbsSamplingTwoAndNodeCompare_RandCntxt, //rand
 		&AbsSamplingTwoAndNodeCompare_HeuristicSimple, //HBSimple
-		nullptr //HBEqualDist
+		&AbsSamplingTwoAndNodeCompare_HeuristicSimple //HBEqualDist
 	} ;
 AbsSamplingAccumFn* AS_ACCUM_FNS[8] {
 		nullptr, //unique

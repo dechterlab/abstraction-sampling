@@ -2,6 +2,3 @@ OL_to is the list of expanded nodes
 OL_from is the list of selected representatives
 
 _nLevelsLimit is based on branching variables to force Knuth abstractions under the branching variable
-
-- check for where decisions were made based on the node comparison functions
-- check for where decisions were made based on accumulation functions
