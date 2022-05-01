@@ -309,7 +309,7 @@ expand_more :
 							int32_t idxS = 0, idxE = -1 ;
 							while(idxS < OL_to.size()){
 								int32_t idx = idxS;
-								while(currentRunningAccumulation < currentIntervalEnd){
+								while(currentRunningAccumulation + EPS < currentIntervalEnd){
 									LOG_OF_SUM_OF_TWO_NUMBERS_GIVEN_AS_LOGS(currentRunningAccumulation, currentRunningAccumulation, OL_to[idx]->h())
 									++idx;
 									}

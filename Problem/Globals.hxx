@@ -35,6 +35,7 @@ typedef unsigned int DWORD;
 #define LOG_OF_SUM_OF_TWO_NUMBERS_GIVEN_AS_LOGS(sum,x,y) { if (x == y) sum = 0.30102999566398119521373889472449 + x ; else if (x > y) sum = x + log10(1.0 + pow(10.0, y - x)) ; else sum = y + log10(1.0 + pow(10.0, x - y)) ; }
 #define LOG_OF_SUB_OF_TWO_NUMBERS_GIVEN_AS_LOGS(sub,x,y) { if (x == y) sub = - std::numeric_limits<double>::infinity() ; else if (x > y) sub = x + log10(1.0 - pow(10.0, y - x)) ; else sub = y + log10(1.0 - pow(10.0, x - y)) ; }
 #define SCALE_DATA_NUMBER_TO_RANGE(num,data_min,data_max,range_min,range_max) { num = (num-data_min)/(data_max-data_min)*(range_max-range_min) + range_min ; }
+#define EPS 1e-12
 
 namespace ARE
 {
