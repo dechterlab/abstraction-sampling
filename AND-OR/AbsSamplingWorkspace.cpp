@@ -892,6 +892,11 @@ int32_t AbsSamplingTwoAndNodeCompare_RandCntxt(void *Obj1, void *Obj2)
 	return a1 < a2 ? -1 : 1 ;
 }
 
+double getHeur(void *Obj){ 
+	AndOrSearchSpace::SearchAndNode_WithPath *n = (AndOrSearchSpace::SearchAndNode_WithPath*) Obj ;
+	return n->h(); 
+	}
+
 // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // //// Bobak /////////////////////////////////////////////////////////////////////////////////////////////////////
 // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -951,9 +956,10 @@ const std::unordered_map<std::string, AS_FXNS> AS_FXNS_MAP{
 		{"relCB_bfs", relCB_bfs},
 		{"randCB_dfs", randCB_dfs},
 		{"simpleHB_dfs", simpleHB_dfs},
-		{"equalDistHB_dfs", balancedHB_dfs}
+		{"equalDistHB_dfs", balancedHB_dfs},
+		{"minVarHB_dfs", minVarHB_dfs}
 	} ;
-AbsSamplingCompFn* AS_NODE_COMP_FNS[8] {
+AbsSamplingCompFn* AS_NODE_COMP_FNS[9] {
 		&AbsSamplingTwoAndNodeCompare_Unique, //unique
 		&AbsSamplingTwoAndNodeCompare_CustomProper_DFS, //customproper_dfs
 		&AbsSamplingTwoAndNodeCompare_CustomProper, //customproper_bfs
@@ -961,9 +967,10 @@ AbsSamplingCompFn* AS_NODE_COMP_FNS[8] {
 		&AbsSamplingTwoAndNodeCompare_CustomProper, //context_bfs
 		&AbsSamplingTwoAndNodeCompare_RandCntxt, //rand
 		&AbsSamplingTwoAndNodeCompare_HeuristicSimple, //HBSimple
-		&AbsSamplingTwoAndNodeCompare_HeuristicSimple //HBEqualDist
+		&AbsSamplingTwoAndNodeCompare_HeuristicSimple, //HBEqualDist
+		&AbsSamplingTwoAndNodeCompare_HeuristicSimple //minVarHB_dfs
 	} ;
-AbsSamplingAccumFn* AS_ACCUM_FNS[8] {
+AbsSamplingAccumFn* AS_ACCUM_FNS[9] {
 		nullptr, //unique
 		nullptr, //customproper_dfs
 		nullptr, //customproper_bfs
@@ -971,10 +978,11 @@ AbsSamplingAccumFn* AS_ACCUM_FNS[8] {
 		nullptr, //context_bfs
 		nullptr, //rand
 		nullptr, //HBSimple
-		&AccumulateNodeLogHeuristicValue //HBEqualDist
+		&AccumulateNodeLogHeuristicValue, //HBEqualDist
+		nullptr, //minVarHB_dfs
 	} ;
 // enum AS_ALG_PROPERTY_IDX {dfs=0, randomized, dynamic} ;
-bool AS_ALG_PROPERTIES[8][3] {
+bool AS_ALG_PROPERTIES[9][3] {
 		{true, false, false}, //unique
 		{true, false, false}, //customproper_dfs
 		{false, false, false}, //customproper_bfs
@@ -982,7 +990,9 @@ bool AS_ALG_PROPERTIES[8][3] {
 		{false, false, false}, //context_bfs
 		{true, true, false}, //rand
 		{true, false, true}, //HBSimple
-		{true, false, true} //HBEqualDist
+		{true, false, true}, //HBEqualDist
+		{true, false, true} //minVarHB_dfs
+
 	} ;
 
 

@@ -87,6 +87,7 @@ add_executable(AbstractionSampling
   ./Utils/Heap.cpp
   ./Utils/HeapBasic.cpp
   ./Utils/HeapBasicReductionWithPermutationMapping.cpp
+  ./Utils/HierarchicalCluster.cxx
   ./Utils/Mutex.cpp
   ./Utils/MiscUtils.cpp
   ./Utils/FnExecutionThread.cpp

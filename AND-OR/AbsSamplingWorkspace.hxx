@@ -30,12 +30,25 @@ AbsSamplingCompFn AbsSamplingTwoAndNodeCompare_RandCntxt ;
 typedef void (AbsSamplingAccumFn)(double& accumulatedValue, void *Obj) ;
 AbsSamplingAccumFn AccumulateNodeLogHeuristicValue ;
 
-enum AS_FXNS {no_abs_fxn_specified=-1, unique=0, customproper_dfs, customproper_bfs, relCB_dfs, relCB_bfs, randCB_dfs, simpleHB_dfs, balancedHB_dfs} ;
+typedef double (AbsSamplingNodeValueExtractionFn)(void *Obj) ;
+AbsSamplingNodeValueExtractionFn getHeur ;
+
+enum AS_FXNS {
+	no_abs_fxn_specified=-1, 
+	unique=0, 
+	customproper_dfs, 
+	customproper_bfs, 
+	relCB_dfs, 
+	relCB_bfs, 
+	randCB_dfs, 
+	simpleHB_dfs, 
+	balancedHB_dfs,
+	minVarHB_dfs} ;
 enum AS_ALG_PROPERTY_IDX {dfs=0, randomized, dynamic} ;
 extern const std::unordered_map<std::string, AS_FXNS> AS_FXNS_MAP ;
-extern AbsSamplingCompFn* AS_NODE_COMP_FNS[8] ;
-extern AbsSamplingAccumFn* AS_ACCUM_FNS[8] ;
-extern bool AS_ALG_PROPERTIES[8][3] ;
+extern AbsSamplingCompFn* AS_NODE_COMP_FNS[9] ;
+extern AbsSamplingAccumFn* AS_ACCUM_FNS[9] ;
+extern bool AS_ALG_PROPERTIES[9][3] ;
 
 struct AS_ALG {
 	AS_FXNS abs_fxn = AS_FXNS::no_abs_fxn_specified;
@@ -118,6 +131,8 @@ protected :
 
 	// comparison fn for comparing two AND nodes; this defines the abstraction.
 	AbsSamplingAccumFn *_AccumFn ;
+
+	AbsSamplingNodeValueExtractionFn *_NodeValExtractionFn = &getHeur ;
 
 	// scaling h or w during sampling?
 	bool _scaling ;

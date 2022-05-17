@@ -5,6 +5,7 @@
 #include "Globals.hxx"
 #include "MBEworkspace.hxx"
 #include "SearchSpaceNodes.hxx"
+#include "HierarchicalCluster.hxx"
 #include <AbsSamplingWorkspace.hxx>
 #include <DFSANDcontainer.hxx>
 
@@ -321,6 +322,35 @@ expand_more :
 									LOG_OF_SUM_OF_TWO_NUMBERS_GIVEN_AS_LOGS(currentIntervalEnd, currentIntervalEnd, intervalH);
 									}
 								}
+							}
+						}
+					}
+				else if(_Alg.abs_fxn==minVarHB_dfs){
+					//NOTE: currently assumes nodes are from the same variable since DFS
+					//do a Knuth abstraction if reached _nLevelsLimit
+					AndOrSearchSpace::SearchAndNode *temp_n = (AndOrSearchSpace::SearchAndNode*) OL_to[0] ;
+					if (_nLevelsLimit >= 0 && _NumberOfAncestorBranchingVariables[temp_n->V()] >= _nLevelsLimit) {
+						SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, 0, OL_to.size()-1);
+						OL_from.push_back(an_merged) ;
+					}
+					else {
+						if (OL_to.size() > 1) 
+							QuickSort((void**) OL_to.data(), OL_to.size(), left, right, _CompFn) ;
+						std::vector<uint32_t> exclusiveEndPoints;
+
+						SortedLinearMinVarianceHierchicalClustering(exclusiveEndPoints, (void**) OL_to.data(), OL_to.size(), _nRandAbs, _NodeValExtractionFn);
+						
+						// SortedLinearMinVarianceHierchicalClustering(exclusiveEndPoints, (void**) OL_to.data(), OL_to.size(), _nRandAbs, 
+						// 	[] (void *Obj){ 
+						// 		AndOrSearchSpace::SearchAndNode_WithPath *n = (AndOrSearchSpace::SearchAndNode_WithPath*) Obj ;
+						// 		return n->h(); 
+						// 		}
+						// );
+						int32_t idxS = 0;
+						for(uint32_t idxE : exclusiveEndPoints){
+							SearchAndNode_WithPath *an_merged = DoISmerge(OL_to, idxS, idxE) ;
+							idxS = idxE ;
+							OL_from.push_back(an_merged) ;
 							}
 						}
 					}

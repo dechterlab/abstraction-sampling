@@ -24,7 +24,7 @@
 // 3000002 = proper/non-proper both in same AbsSampling.cpp
 // 3000003 = randomized abstractions
 // #define AS_VERSION 3000006
-#define AS_VERSION 3000011
+#define AS_VERSION 3000012
 
 //#define PERFORM_SINGLTON_CONSISTENCY_CHECK
 
