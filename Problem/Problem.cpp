@@ -732,6 +732,53 @@ done :
 
 int32_t ARE::ARP::LoadFromFile_Evidence(const std::string & FileName, int32_t & nEvidenceVars)
 {
+	nEvidenceVars = -1 ;
+
+	std::ifstream fin;
+	fin.open(FileName.c_str());
+	if(!fin){
+		printf("\nevidencefile did not open properly; quitting ...\n") ;
+		return 1 ;
+	}
+	
+	fin >> nEvidenceVars;
+	if(nEvidenceVars < 0){
+		printf("\ninvalid number of evidence vars; quitting ...\n") ;
+		return 1 ;
+	}
+
+	int var = -1;
+	int val = -1;
+	for(int i=0; i < nEvidenceVars; ++i){
+		fin >> var;
+		fin >> val;
+		if(!fin){
+			printf("\nnumber of evidence assignments did not match number of evidence variables initially provided; quitting ...\n") ;
+			return 1 ;
+		}
+		if (var < 0 || var >= _nVars){
+			printf("\nevidence var is not within problem vars; quitting ...\n") ;
+			return 1 ;
+		}
+		if (val < 0 || val >= _K[var]){
+			printf("\nan evidence assignment is outside of its variable's domain; quitting ...\n") ;
+			return 1 ;
+		}
+		_Value[var] = val ;
+	}
+	if(fin >> var){ //should evaluate to false since we have already extracted all the evidence variables and assignments
+		printf("\nthere were more variables in the evidence file than the number indicated; quitting ...\n") ;
+		return 1 ;
+	}
+
+	fin.close();
+	_EvidenceFileName = FileName ;
+	
+	return 0 ;
+}
+
+int32_t ARE::ARP::LoadFromFile_Evidence_old(const std::string & FileName, int32_t & nEvidenceVars)
+{
 	nEvidenceVars = 0 ;
 
 	int32_t ret = 1 ;
@@ -771,6 +818,7 @@ int32_t ARE::ARP::LoadFromFile_Evidence(const std::string & FileName, int32_t & 
 	delete [] BUF ;
 	return res ;
 }
+
 
 
 int32_t ARE::ARP::LoadUAIFormat_Evidence(const char *BUF, int32_t L, int32_t & nEvidenceVars)

@@ -425,6 +425,7 @@ public :
 	// load from file/buffer.
 	int32_t LoadFromFile(const std::string & FileName) ;
 	int32_t LoadFromFile_Evidence(const std::string & FileName, int32_t & nEvidenceVars) ;
+	int32_t LoadFromFile_Evidence_old(const std::string & FileName, int32_t & nEvidenceVars) ;
 
 	// this function loads problem from UAI format file; we assume data is already in buf.
 	int32_t LoadFromBuffer(const char *format, const char *buf, int32_t L) ;
